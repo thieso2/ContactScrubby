@@ -1,0 +1,18 @@
+This repository contains code generated entirely by AI.
+
+Project: ContactScrubby
+AI Tool: Claude Code (https://claude.ai/code)
+Generation Date: 2025-07-18
+Method: Conversational Programming ("vibe-coding")
+
+Generated Components:
+- All Swift source code and architecture
+- Complete test suite (51 tests)
+- Documentation and README
+- CI/CD pipeline configuration
+- Package management setup
+- Code quality tools and configuration
+
+This marker file indicates that no traditional manual coding was involved in creating this project. All code was generated through natural language interactions with Claude Code, demonstrating AI-assisted software development capabilities.
+
+The entire project was created in a single conversation session without any manual text editing or IDE usage.

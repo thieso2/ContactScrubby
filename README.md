@@ -1,5 +1,13 @@
 # ContactScrubby
 
+> [!NOTE]
+> **AI-Generated Project**: This entire project was created using [Claude Code](https://claude.ai/code) through conversational programming. The code was written through natural language interactions without traditional coding - a process known as "vibe-coding" where the AI generated all source code, tests, documentation, and CI/CD configuration based on high-level requirements and iterative feedback.
+
+[![AI Generated](https://img.shields.io/badge/AI%20Generated-Claude%20Code-blue?style=for-the-badge&logo=anthropic)](https://claude.ai/code)
+[![Swift](https://img.shields.io/badge/Swift-5.8-orange?style=for-the-badge&logo=swift)](https://swift.org)
+[![Platform](https://img.shields.io/badge/Platform-macOS-lightgrey?style=for-the-badge&logo=apple)](https://developer.apple.com/macos/)
+[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)](LICENSE)
+
 A powerful command-line tool for managing, analyzing, and exporting macOS contacts with advanced filtering and dubious contact detection capabilities.
 
 ## Table of Contents
@@ -339,6 +347,9 @@ Tests/ContactScrubbyTests/
 
 ## Contributing
 
+> [!IMPORTANT]
+> **AI-Generated Codebase**: This project was entirely created through conversational programming with Claude Code. All source code, tests, documentation, and CI/CD configuration were generated through natural language interactions. Contributors should be aware that the codebase reflects AI-generated patterns and architectural decisions.
+
 Contributions are welcome! Please follow these guidelines:
 
 1. **Issues**: Use GitHub issues for bug reports and feature requests
@@ -393,6 +404,27 @@ swift test --verbose
 - Check the [Issues](https://github.com/yourusername/ContactScrubby/issues) page
 - Review the [Documentation](https://github.com/yourusername/ContactScrubby/wiki)
 - Contact the maintainers
+
+## AI Generation Process
+
+This project demonstrates the capabilities of modern AI-assisted development:
+
+### Development Methodology
+- **Conversational Programming**: All code was generated through natural language interactions with Claude Code
+- **Vibe-Coding**: Development driven by high-level requirements and iterative feedback rather than traditional coding
+- **Zero Manual Coding**: No traditional text editing or IDE usage - purely AI-generated implementation
+
+### Generated Components
+- ✅ **Source Code**: Complete Swift implementation with modular architecture
+- ✅ **Test Suite**: 51 comprehensive tests covering all functionality
+- ✅ **Documentation**: README, inline comments, and developer guides
+- ✅ **CI/CD Pipeline**: GitHub Actions with testing, linting, and automated releases
+- ✅ **Code Quality**: SwiftLint configuration and violation fixes
+- ✅ **Package Management**: Swift Package Manager configuration
+- ✅ **Release Automation**: Automated binary builds and Homebrew formula generation
+
+### Development Timeline
+The entire project was created in a single AI conversation session, demonstrating rapid prototyping and full-stack development capabilities through conversational programming.
 
 ## License
 
