@@ -160,14 +160,13 @@ jobs:
         tar -czf contactscrub-${{ github.event.release.tag_name }}-macos.tar.gz -C release .
         
     - name: Upload release assets
-      uses: shogo82148/actions-upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: svenstaro/upload-release-action@v2
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./contactscrub-${{ github.event.release.tag_name }}-macos.tar.gz
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./contactscrub-${{ github.event.release.tag_name }}-macos.tar.gz
         asset_name: contactscrub-${{ github.event.release.tag_name }}-macos.tar.gz
-        asset_content_type: application/gzip
+        tag: ${{ github.ref }}
+        overwrite: true
         
     - name: Create Homebrew formula
       run: |
@@ -197,11 +196,10 @@ jobs:
         EOF
         
     - name: Upload Homebrew formula
-      uses: shogo82148/actions-upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      uses: svenstaro/upload-release-action@v2
       with:
-        upload_url: ${{ github.event.release.upload_url }}
-        asset_path: ./contactscrub.rb
+        repo_token: ${{ secrets.GITHUB_TOKEN }}
+        file: ./contactscrub.rb
         asset_name: contactscrub.rb
-        asset_content_type: text/plain
+        tag: ${{ github.ref }}
+        overwrite: true
