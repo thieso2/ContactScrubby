@@ -213,7 +213,7 @@ class ContactsManager {
         let isSuspicious: Bool
         
         func isDubious(minimumScore: Int = 3) -> Bool {
-            return dubiousScore >= minimumScore || isIncomplete || isSuspicious
+            return dubiousScore >= minimumScore
         }
     }
     
