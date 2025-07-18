@@ -1,11 +1,6 @@
 import Foundation
 import Contacts
 
-enum ImageMode {
-    case none
-    case inline
-    case folder
-}
 
 struct SerializableContact: Codable {
     let name: String
@@ -204,14 +199,6 @@ class ContactsManager {
         }
     }
     
-    enum FilterMode {
-        case withEmail
-        case withoutEmail
-        case facebookOnly
-        case facebookExclusive
-        case dubious
-        case all
-    }
     
     struct ContactAnalysis {
         let contact: CNContact
@@ -399,6 +386,41 @@ class ContactsManager {
         return serializableContacts
     }
     
+    func getContactsForFolderExport(filterMode: FilterMode = .all, dubiousMinScore: Int = 3) throws -> [CNContact] {
+        let contacts = try listContactsWithAllFields()
+        var filteredContacts: [CNContact] = []
+        
+        for contact in contacts {
+            let emails = contact.emailAddresses.map { $0.value as String }
+            let phones = contact.phoneNumbers.map { $0.value.stringValue }
+            
+            // Apply filter
+            switch filterMode {
+            case .withEmail:
+                if emails.isEmpty { continue }
+            case .withoutEmail:
+                if !emails.isEmpty { continue }
+            case .facebookOnly:
+                let facebookEmails = emails.filter { $0.lowercased().hasSuffix("@facebook.com") }
+                if facebookEmails.isEmpty { continue }
+            case .facebookExclusive:
+                let facebookEmails = emails.filter { $0.lowercased().hasSuffix("@facebook.com") }
+                let hasOnlyFacebookEmails = !facebookEmails.isEmpty && facebookEmails.count == emails.count
+                let hasNoPhones = phones.isEmpty
+                if !(hasOnlyFacebookEmails && hasNoPhones) { continue }
+            case .dubious:
+                let analysis = analyzeContact(contact)
+                if !analysis.isDubious(minimumScore: dubiousMinScore) { continue }
+            case .all:
+                break
+            }
+            
+            filteredContacts.append(contact)
+        }
+        
+        return filteredContacts
+    }
+    
     private func cleanLabel(_ label: String?) -> String? {
         guard let label = label else { return nil }
         
@@ -479,7 +501,7 @@ class ContactsManager {
         return (added: addedCount, skipped: skippedCount, errors: errors)
     }
     
-    private func convertToSerializable(_ contact: CNContact, includeImages: Bool = false) -> SerializableContact {
+    func convertToSerializable(_ contact: CNContact, includeImages: Bool = false) -> SerializableContact {
         let fullName = [contact.namePrefix, contact.givenName, contact.middleName, contact.familyName, contact.nameSuffix]
             .filter { !$0.isEmpty }
             .joined(separator: " ")
