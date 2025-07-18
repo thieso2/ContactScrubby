@@ -165,36 +165,24 @@ struct CommandHandlers {
 
                 for analysis in dubiousAnalyses {
                     let contact = analysis.contact
-                    let emails = contact.emailAddresses.map { $0.value as String }
-                    let phones = contact.phoneNumbers.map { $0.value.stringValue }
                     let fullName = [contact.givenName, contact.familyName]
                         .filter { !$0.isEmpty }
                         .joined(separator: " ")
                     let displayName = fullName.isEmpty ? "No Name" : fullName
 
-                    print("Name: \(displayName) [Score: \(analysis.dubiousScore)]")
-
-                    if !emails.isEmpty {
-                        for email in emails {
-                            print("  Email: \(email)")
-                        }
-                    }
-
-                    if !phones.isEmpty {
-                        for phone in phones {
-                            print("  Phone: \(phone)")
-                        }
-                    }
-
-                    print("  Issues: \(analysis.reasons.joined(separator: ", "))")
+                    print("== \(displayName) [Dubious Score: \(analysis.dubiousScore)] ==")
+                    print("Issues: \(analysis.reasons.joined(separator: ", "))")
 
                     if analysis.isIncomplete {
-                        print("  Status: Incomplete")
+                        print("Status: Incomplete")
                     }
                     if analysis.isSuspicious {
-                        print("  Status: Suspicious")
+                        print("Status: Suspicious")
                     }
 
+                    print()
+                    DisplayUtilities.printFullContactDetails(contact)
+                    print(String(repeating: "-", count: 50))
                     print()
                 }
 
