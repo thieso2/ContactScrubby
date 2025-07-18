@@ -37,7 +37,7 @@ final class CLIIntegrationTests: XCTestCase {
     func testDefaultArgumentParsing() throws {
         let command = try ContactScrubby.parse([])
 
-        XCTAssertEqual(command.filter, .withEmail)
+        XCTAssertEqual(command.filter, .all)
         XCTAssertEqual(command.dubiousScore, 3)
         XCTAssertFalse(command.dump)
         XCTAssertNil(command.backup)
@@ -47,14 +47,14 @@ final class CLIIntegrationTests: XCTestCase {
 
     func testFilterArguments() throws {
         let testCases: [(String, FilterMode)] = [
-            ("--filter", .withEmail),
+            ("--filter", .all),
             ("--filter=with-email", .withEmail),
             ("--filter=no-email", .withoutEmail),
             ("--filter=facebook", .facebookOnly),
             ("--filter=facebook-exclusive", .facebookExclusive),
             ("--filter=dubious", .dubious),
             ("--filter=all", .all),
-            ("-f", .withEmail),
+            ("-f", .all),
             ("-f=dubious", .dubious)
         ]
 
@@ -174,7 +174,7 @@ final class CLIIntegrationTests: XCTestCase {
         // This tests the logical behavior - when no arguments are provided,
         // all options should be at their default values
         let command = try! ContactScrubby.parse([])
-        XCTAssertEqual(command.filter, .withEmail)
+        XCTAssertEqual(command.filter, .all)
         XCTAssertEqual(command.dubiousScore, 3)
         XCTAssertFalse(command.dump)
         XCTAssertNil(command.backup)

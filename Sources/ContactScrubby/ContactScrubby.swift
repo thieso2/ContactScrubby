@@ -11,7 +11,7 @@ struct ContactScrubby: AsyncParsableCommand {
     )
 
     @Option(name: .shortAndLong, help: "Filter mode for contacts")
-    var filter: FilterMode = .withEmail
+    var filter: FilterMode = .all
 
     @Option(name: .long, help: "Minimum dubiousness score for dubious contacts")
     var dubiousScore: Int = 3
@@ -39,7 +39,7 @@ struct ContactScrubby: AsyncParsableCommand {
 
     func run() async throws {
         // Check if no arguments were provided (all options are at their default values)
-        if filter == .withEmail && dubiousScore == 3 && !dump && backup == nil && 
+        if filter == .all && dubiousScore == 3 && !dump && backup == nil && 
            includeImages == .none && addToGroup == nil && !findDuplicates && !mergeDuplicates &&
            mergeStrategy == "conservative" {
             // Check if we're being called with no arguments at all

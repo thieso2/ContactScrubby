@@ -13,7 +13,7 @@ enum FilterMode: String, ExpressibleByArgument, CaseIterable {
     var help: String {
         switch self {
         case .withEmail:
-            return "List contacts that have email addresses (default)"
+            return "List contacts that have email addresses"
         case .withoutEmail:
             return "List contacts that have no email addresses"
         case .facebookOnly:
@@ -23,7 +23,7 @@ enum FilterMode: String, ExpressibleByArgument, CaseIterable {
         case .dubious:
             return "List dubious/incomplete contacts (likely auto-imports)"
         case .all:
-            return "List all contacts"
+            return "List all contacts (default)"
         }
     }
 }
