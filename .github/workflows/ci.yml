@@ -23,7 +23,7 @@ jobs:
         swift-version: '5.9'
         
     - name: Cache Swift packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .build
         key: ${{ runner.os }}-swift-${{ hashFiles('**/Package.resolved') }}
@@ -40,7 +40,7 @@ jobs:
           -instr-profile .build/debug/codecov/default.profdata > coverage.lcov
       
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      uses: codecov/codecov-action@v4
       with:
         file: ./coverage.lcov
         flags: unittests
@@ -62,7 +62,7 @@ jobs:
         swift-version: '5.9'
         
     - name: Cache Swift packages
-      uses: actions/cache@v3
+      uses: actions/cache@v4
       with:
         path: .build
         key: ${{ runner.os }}-swift-${{ hashFiles('**/Package.resolved') }}
@@ -81,7 +81,7 @@ jobs:
         .build/release/contactscrub --version
         
     - name: Upload build artifacts
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: contactscrub-${{ github.sha }}
         path: .build/release/contactscrub
@@ -160,7 +160,7 @@ jobs:
         tar -czf contactscrub-${{ github.event.release.tag_name }}-macos.tar.gz -C release .
         
     - name: Upload release assets
-      uses: actions/upload-release-asset@v1
+      uses: shogo82148/actions-upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
@@ -197,7 +197,7 @@ jobs:
         EOF
         
     - name: Upload Homebrew formula
-      uses: actions/upload-release-asset@v1
+      uses: shogo82148/actions-upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
