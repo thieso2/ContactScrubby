@@ -6,20 +6,37 @@ struct DisplayUtilities {
     // MARK: - Label Formatting
 
     static func formatLabel(_ label: String?) -> String {
-        guard let label = label else { return "" }
+        guard let label = label, !label.isEmpty else { return "other" }
 
-        // Use the Contacts framework's built-in localization
-        let localizedLabel = CNLabeledValue<NSString>.localizedString(forLabel: label)
-
-        // If it's still in the internal format, clean it up
-        if localizedLabel.hasPrefix("_$!<") && localizedLabel.hasSuffix(">!$_") {
-            let cleaned = localizedLabel
-                .replacingOccurrences(of: "_$!<", with: "")
-                .replacingOccurrences(of: ">!$_", with: "")
-            return cleaned
+        // Map common CN labels to English consistently
+        let englishLabels: [String: String] = [
+            CNLabelHome: "home",
+            CNLabelWork: "work", 
+            CNLabelOther: "other",
+            CNLabelPhoneNumberMobile: "mobile",
+            CNLabelPhoneNumberMain: "main",
+            CNLabelPhoneNumberHomeFax: "home fax",
+            CNLabelPhoneNumberWorkFax: "work fax",
+            CNLabelPhoneNumberPager: "pager",
+            CNLabelEmailiCloud: "iCloud",
+            CNLabelURLAddressHomePage: "home page"
+        ]
+        
+        // Check if it's a known CN label
+        if let englishLabel = englishLabels[label] {
+            return englishLabel
         }
 
-        return localizedLabel
+        // If it's still in the internal format, clean it up
+        if label.hasPrefix("_$!<") && label.hasSuffix(">!$_") {
+            let cleaned = label
+                .replacingOccurrences(of: "_$!<", with: "")
+                .replacingOccurrences(of: ">!$_", with: "")
+            return cleaned.lowercased()
+        }
+
+        // For custom labels, return as-is
+        return label
     }
 
     // MARK: - Full Contact Details Display

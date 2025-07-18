@@ -57,9 +57,9 @@ final class ModelsTests: XCTestCase {
     }
 
     func testImageModeFromString() {
-        XCTAssertEqual(ImageMode(rawValue: "none"), .none)
-        XCTAssertEqual(ImageMode(rawValue: "inline"), .inline)
-        XCTAssertEqual(ImageMode(rawValue: "folder"), .folder)
+        XCTAssertEqual(ImageMode(rawValue: "none"), ImageMode.none)
+        XCTAssertEqual(ImageMode(rawValue: "inline"), ImageMode.inline)
+        XCTAssertEqual(ImageMode(rawValue: "folder"), ImageMode.folder)
         XCTAssertNil(ImageMode(rawValue: "invalid"))
     }
 

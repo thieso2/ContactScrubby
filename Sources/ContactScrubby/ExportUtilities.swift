@@ -96,9 +96,15 @@ struct ExportUtilities {
     // MARK: - Filename Sanitization
 
     static func sanitizeFilename(_ name: String) -> String {
+        // Handle empty or whitespace-only strings
+        let trimmed = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmed.isEmpty {
+            return "unnamed"
+        }
+        
         // Replace invalid filename characters with underscores
         let invalidChars = CharacterSet(charactersIn: "/\\:*?\"<>|")
-        return name.components(separatedBy: invalidChars).joined(separator: "_")
+        return trimmed.components(separatedBy: invalidChars).joined(separator: "_")
     }
 
     // MARK: - JSON Export
