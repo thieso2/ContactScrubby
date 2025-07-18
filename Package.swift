@@ -4,14 +4,14 @@
 import PackageDescription
 
 let package = Package(
-    name: "ContactsCLI",
+    name: "ContactScrubby",
     platforms: [
         .macOS(.v10_15)
     ],
     products: [
         .executable(
-            name: "ContactsCLI",
-            targets: ["ContactsCLI"]
+            name: "contactscrub",
+            targets: ["ContactScrubby"]
         ),
     ],
     dependencies: [
@@ -21,15 +21,15 @@ let package = Package(
         // Targets are the basic building blocks of a package, defining a module or a test suite.
         // Targets can depend on other targets in this package and products from dependencies.
         .executableTarget(
-            name: "ContactsCLI",
+            name: "ContactScrubby",
             dependencies: [
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),
         .testTarget(
-            name: "ContactsCLITests",
+            name: "ContactScrubbyTests",
             dependencies: [
-                "ContactsCLI",
+                "ContactScrubby",
                 .product(name: "ArgumentParser", package: "swift-argument-parser")
             ]
         ),

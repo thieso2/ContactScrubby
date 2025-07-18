@@ -1,6 +1,6 @@
 import XCTest
 import Contacts
-@testable import ContactsCLI
+@testable import ContactScrubby
 
 final class ContactsManagerTests: XCTestCase {
     
@@ -337,7 +337,7 @@ final class ContactsManagerTests: XCTestCase {
         ]
         
         for (input, expected) in testCases {
-            let result = ContactsCLI.sanitizeFilename(input)
+            let result = ContactScrubby.sanitizeFilename(input)
             XCTAssertEqual(result, expected, "Failed for input: '\(input)'")
         }
     }
@@ -355,43 +355,43 @@ final class ContactsManagerTests: XCTestCase {
         ]
         
         for (input, expected) in testCases {
-            let result = ContactsCLI.escapeXML(input)
+            let result = ContactScrubby.escapeXML(input)
             XCTAssertEqual(result, expected, "Failed for input: '\(input)'")
         }
     }
     
     func testGetEmptyMessage() {
-        XCTAssertEqual(ContactsCLI.getEmptyMessage(for: .withEmail), "No contacts with email addresses found.")
-        XCTAssertEqual(ContactsCLI.getEmptyMessage(for: .withoutEmail), "No contacts without email addresses found.")
-        XCTAssertEqual(ContactsCLI.getEmptyMessage(for: .facebookOnly), "No contacts with @facebook.com email addresses found.")
-        XCTAssertEqual(ContactsCLI.getEmptyMessage(for: .facebookExclusive), "No contacts with only @facebook.com email addresses and no phone numbers found.")
-        XCTAssertEqual(ContactsCLI.getEmptyMessage(for: .dubious), "No dubious or incomplete contacts found.")
-        XCTAssertEqual(ContactsCLI.getEmptyMessage(for: .all), "No contacts found.")
+        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .withEmail), "No contacts with email addresses found.")
+        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .withoutEmail), "No contacts without email addresses found.")
+        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .facebookOnly), "No contacts with @facebook.com email addresses found.")
+        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .facebookExclusive), "No contacts with only @facebook.com email addresses and no phone numbers found.")
+        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .dubious), "No dubious or incomplete contacts found.")
+        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .all), "No contacts found.")
     }
     
     func testGetHeaderMessage() {
-        XCTAssertEqual(ContactsCLI.getHeaderMessage(for: .withEmail), "Contacts with email addresses:")
-        XCTAssertEqual(ContactsCLI.getHeaderMessage(for: .withoutEmail), "Contacts without email addresses:")
-        XCTAssertEqual(ContactsCLI.getHeaderMessage(for: .facebookOnly), "Contacts with @facebook.com email addresses:")
-        XCTAssertEqual(ContactsCLI.getHeaderMessage(for: .facebookExclusive), "Contacts with ONLY @facebook.com email addresses and no phone numbers:")
-        XCTAssertEqual(ContactsCLI.getHeaderMessage(for: .dubious), "Dubious or incomplete contacts:")
-        XCTAssertEqual(ContactsCLI.getHeaderMessage(for: .all), "All contacts:")
+        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .withEmail), "Contacts with email addresses:")
+        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .withoutEmail), "Contacts without email addresses:")
+        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .facebookOnly), "Contacts with @facebook.com email addresses:")
+        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .facebookExclusive), "Contacts with ONLY @facebook.com email addresses and no phone numbers:")
+        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .dubious), "Dubious or incomplete contacts:")
+        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .all), "All contacts:")
     }
     
     func testFormatLabel() {
         // Test with nil label
-        XCTAssertEqual(ContactsCLI.formatLabel(nil), "")
+        XCTAssertEqual(ContactScrubby.formatLabel(nil), "")
         
         // Test with standard labels (these may be localized, so we test they're not empty)
-        XCTAssertFalse(ContactsCLI.formatLabel(CNLabelWork).isEmpty)
-        XCTAssertFalse(ContactsCLI.formatLabel(CNLabelHome).isEmpty)
-        XCTAssertFalse(ContactsCLI.formatLabel(CNLabelPhoneNumberMobile).isEmpty)
+        XCTAssertFalse(ContactScrubby.formatLabel(CNLabelWork).isEmpty)
+        XCTAssertFalse(ContactScrubby.formatLabel(CNLabelHome).isEmpty)
+        XCTAssertFalse(ContactScrubby.formatLabel(CNLabelPhoneNumberMobile).isEmpty)
         
         // Test with internal format labels
         let internalLabel = "_$!<TestLabel>!$_"
-        XCTAssertEqual(ContactsCLI.formatLabel(internalLabel), "TestLabel")
+        XCTAssertEqual(ContactScrubby.formatLabel(internalLabel), "TestLabel")
         
         // Test with regular string
-        XCTAssertEqual(ContactsCLI.formatLabel("Custom Label"), "Custom Label")
+        XCTAssertEqual(ContactScrubby.formatLabel("Custom Label"), "Custom Label")
     }
 }

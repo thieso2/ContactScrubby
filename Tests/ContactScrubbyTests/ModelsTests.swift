@@ -1,5 +1,5 @@
 import XCTest
-@testable import ContactsCLI
+@testable import ContactScrubby
 
 final class ModelsTests: XCTestCase {
     

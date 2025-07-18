@@ -1,6 +1,6 @@
 import XCTest
 import ArgumentParser
-@testable import ContactsCLI
+@testable import ContactScrubby
 
 final class CLIIntegrationTests: XCTestCase {
     
@@ -10,7 +10,7 @@ final class CLIIntegrationTests: XCTestCase {
         super.setUp()
         // Create a temporary directory for test files
         tempDirectory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("ContactsCLITests")
+            .appendingPathComponent("ContactScrubbyTests")
             .appendingPathComponent(UUID().uuidString)
         
         try? FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
@@ -25,17 +25,17 @@ final class CLIIntegrationTests: XCTestCase {
     // MARK: - Command Configuration Tests
     
     func testCommandConfiguration() {
-        let config = ContactsCLI.configuration
+        let config = ContactScrubby.configuration
         
-        XCTAssertEqual(config.commandName, "ContactsCLI")
-        XCTAssertEqual(config.abstract, "A command-line tool for managing and exporting contacts")
+        XCTAssertEqual(config.commandName, "contactscrub")
+        XCTAssertEqual(config.abstract, "A powerful contact scrubbing and management tool")
         XCTAssertEqual(config.version, "1.0.0")
     }
     
     // MARK: - Argument Parsing Tests
     
     func testDefaultArgumentParsing() throws {
-        let command = try ContactsCLI.parse([])
+        let command = try ContactScrubby.parse([])
         
         XCTAssertEqual(command.filter, .withEmail)
         XCTAssertEqual(command.dubiousScore, 3)
@@ -60,35 +60,35 @@ final class CLIIntegrationTests: XCTestCase {
         
         for (arg, expectedMode) in testCases {
             let args = arg.contains("=") ? [arg] : [arg, expectedMode.rawValue]
-            let command = try ContactsCLI.parse(args)
+            let command = try ContactScrubby.parse(args)
             XCTAssertEqual(command.filter, expectedMode, "Failed for argument: \(arg)")
         }
     }
     
     func testDubiousScoreArgument() throws {
-        let command1 = try ContactsCLI.parse(["--dubious-score", "5"])
+        let command1 = try ContactScrubby.parse(["--dubious-score", "5"])
         XCTAssertEqual(command1.dubiousScore, 5)
         
-        let command2 = try ContactsCLI.parse(["--dubious-score=10"])
+        let command2 = try ContactScrubby.parse(["--dubious-score=10"])
         XCTAssertEqual(command2.dubiousScore, 10)
     }
     
     func testDumpFlag() throws {
-        let command1 = try ContactsCLI.parse([])
+        let command1 = try ContactScrubby.parse([])
         XCTAssertFalse(command1.dump)
         
-        let command2 = try ContactsCLI.parse(["--dump"])
+        let command2 = try ContactScrubby.parse(["--dump"])
         XCTAssertTrue(command2.dump)
     }
     
     func testBackupArgument() throws {
-        let command1 = try ContactsCLI.parse([])
+        let command1 = try ContactScrubby.parse([])
         XCTAssertNil(command1.backup)
         
-        let command2 = try ContactsCLI.parse(["--backup", "test.json"])
+        let command2 = try ContactScrubby.parse(["--backup", "test.json"])
         XCTAssertEqual(command2.backup, "test.json")
         
-        let command3 = try ContactsCLI.parse(["--backup=contacts.xml"])
+        let command3 = try ContactScrubby.parse(["--backup=contacts.xml"])
         XCTAssertEqual(command3.backup, "contacts.xml")
     }
     
@@ -100,24 +100,24 @@ final class CLIIntegrationTests: XCTestCase {
         ]
         
         for (value, expectedMode) in testCases {
-            let command = try ContactsCLI.parse(["--include-images", value])
+            let command = try ContactScrubby.parse(["--include-images", value])
             XCTAssertEqual(command.includeImages, expectedMode, "Failed for value: \(value)")
         }
     }
     
     func testAddToGroupArgument() throws {
-        let command1 = try ContactsCLI.parse([])
+        let command1 = try ContactScrubby.parse([])
         XCTAssertNil(command1.addToGroup)
         
-        let command2 = try ContactsCLI.parse(["--add-to-group", "Test Group"])
+        let command2 = try ContactScrubby.parse(["--add-to-group", "Test Group"])
         XCTAssertEqual(command2.addToGroup, "Test Group")
         
-        let command3 = try ContactsCLI.parse(["--add-to-group=Facebook Contacts"])
+        let command3 = try ContactScrubby.parse(["--add-to-group=Facebook Contacts"])
         XCTAssertEqual(command3.addToGroup, "Facebook Contacts")
     }
     
     func testCombinedArguments() throws {
-        let command = try ContactsCLI.parse([
+        let command = try ContactScrubby.parse([
             "--filter", "dubious",
             "--dubious-score", "2",
             "--backup", "suspicious.json",
@@ -133,21 +133,21 @@ final class CLIIntegrationTests: XCTestCase {
     // MARK: - Invalid Argument Tests
     
     func testInvalidFilterMode() {
-        XCTAssertThrowsError(try ContactsCLI.parse(["--filter", "invalid"])) { error in
+        XCTAssertThrowsError(try ContactScrubby.parse(["--filter", "invalid"])) { error in
             // ArgumentParser throws different error types for invalid values
             XCTAssertTrue(error is Error)
         }
     }
     
     func testInvalidImageMode() {
-        XCTAssertThrowsError(try ContactsCLI.parse(["--include-images", "invalid"])) { error in
+        XCTAssertThrowsError(try ContactScrubby.parse(["--include-images", "invalid"])) { error in
             // ArgumentParser throws different error types for invalid values
             XCTAssertTrue(error is Error)
         }
     }
     
     func testInvalidDubiousScore() {
-        XCTAssertThrowsError(try ContactsCLI.parse(["--dubious-score", "invalid"])) { error in
+        XCTAssertThrowsError(try ContactScrubby.parse(["--dubious-score", "invalid"])) { error in
             // ArgumentParser throws different error types for invalid values
             XCTAssertTrue(error is Error)
         }
@@ -157,14 +157,14 @@ final class CLIIntegrationTests: XCTestCase {
     
     func testHelpOutput() {
         // Test that help can be requested
-        XCTAssertThrowsError(try ContactsCLI.parse(["--help"])) { error in
+        XCTAssertThrowsError(try ContactScrubby.parse(["--help"])) { error in
             // Help should throw some kind of error to exit
             XCTAssertTrue(error is Error)
         }
     }
     
     func testVersionOutput() {
-        XCTAssertThrowsError(try ContactsCLI.parse(["--version"])) { error in
+        XCTAssertThrowsError(try ContactScrubby.parse(["--version"])) { error in
             // Version should throw some kind of error to exit
             XCTAssertTrue(error is Error)
         }
@@ -205,7 +205,7 @@ final class CLIIntegrationTests: XCTestCase {
             )
         ]
         
-        try ContactsCLI.exportAsJSON(contacts: testContacts, to: testFile)
+        try ContactScrubby.exportAsJSON(contacts: testContacts, to: testFile)
         
         XCTAssertTrue(FileManager.default.fileExists(atPath: testFile.path))
         
@@ -270,7 +270,7 @@ final class CLIIntegrationTests: XCTestCase {
             )
         ]
         
-        try ContactsCLI.exportAsXML(contacts: testContacts, to: testFile)
+        try ContactScrubby.exportAsXML(contacts: testContacts, to: testFile)
         
         XCTAssertTrue(FileManager.default.fileExists(atPath: testFile.path))
         
@@ -331,7 +331,7 @@ final class CLIIntegrationTests: XCTestCase {
         ]
         
         for (input, expected) in testCases {
-            let result = ContactsCLI.sanitizeFilename(input)
+            let result = ContactScrubby.sanitizeFilename(input)
             XCTAssertEqual(result, expected, "Failed for: \(input)")
         }
     }
@@ -373,7 +373,7 @@ final class CLIIntegrationTests: XCTestCase {
         let testFile = tempDirectory.appendingPathComponent("large_test.json")
         
         measure {
-            try! ContactsCLI.exportAsJSON(contacts: contacts, to: testFile)
+            try! ContactScrubby.exportAsJSON(contacts: contacts, to: testFile)
         }
         
         XCTAssertTrue(FileManager.default.fileExists(atPath: testFile.path))

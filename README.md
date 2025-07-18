@@ -1,4 +1,4 @@
-# ContactsCLI
+# ContactScrubby
 
 A powerful command-line tool for managing, analyzing, and exporting macOS contacts with advanced filtering and dubious contact detection capabilities.
 
@@ -22,7 +22,7 @@ A powerful command-line tool for managing, analyzing, and exporting macOS contac
 
 ## Overview
 
-ContactsCLI is a Swift-based command-line application that provides comprehensive contact management capabilities for macOS. It offers advanced filtering, export functionality, and intelligent analysis to help identify incomplete or suspicious contacts in your address book.
+ContactScrubby is a Swift-based command-line application that provides comprehensive contact management capabilities for macOS. It offers advanced filtering, export functionality, and intelligent analysis to help identify incomplete or suspicious contacts in your address book.
 
 The tool is particularly useful for:
 - Cleaning up contact databases
@@ -77,8 +77,8 @@ The tool is particularly useful for:
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/ContactsCLI.git
-cd ContactsCLI
+git clone https://github.com/yourusername/ContactScrubby.git
+cd ContactScrubby
 ```
 
 2. Build the project:
@@ -88,7 +88,7 @@ swift build -c release
 
 3. Copy the executable to your PATH:
 ```bash
-cp .build/release/ContactsCLI /usr/local/bin/
+cp .build/release/contactscrub /usr/local/bin/
 ```
 
 ### Using Swift Package Manager
@@ -96,7 +96,7 @@ cp .build/release/ContactsCLI /usr/local/bin/
 Add to your `Package.swift`:
 ```swift
 dependencies: [
-    .package(url: "https://github.com/yourusername/ContactsCLI.git", from: "1.0.0")
+    .package(url: "https://github.com/yourusername/ContactScrubby.git", from: "1.0.0")
 ]
 ```
 
@@ -106,13 +106,13 @@ dependencies: [
 
 ```bash
 # Display all contacts with email addresses
-ContactsCLI
+contactscrub
 
 # Show help
-ContactsCLI --help
+contactscrub --help
 
 # Show version
-ContactsCLI --version
+contactscrub --version
 ```
 
 ### Filtering Options
@@ -130,13 +130,13 @@ The `--filter` (or `-f`) option supports these modes:
 
 ```bash
 # Show contacts without email addresses
-ContactsCLI --filter no-email
+contactscrub --filter no-email
 
 # Show dubious contacts with minimum score of 5
-ContactsCLI --filter dubious --dubious-score 5
+contactscrub --filter dubious --dubious-score 5
 
 # Show all Facebook contacts
-ContactsCLI --filter facebook
+contactscrub --filter facebook
 ```
 
 ### Export Formats
@@ -145,16 +145,16 @@ Export contacts to JSON or XML files:
 
 ```bash
 # Export to JSON
-ContactsCLI --backup contacts.json
+contactscrub --backup contacts.json
 
 # Export to XML with images as base64
-ContactsCLI --backup contacts.xml --include-images inline
+contactscrub --backup contacts.xml --include-images inline
 
 # Export with images in separate folder
-ContactsCLI --backup contacts.json --include-images folder
+contactscrub --backup contacts.json --include-images folder
 
 # Export filtered contacts
-ContactsCLI --filter dubious --backup suspicious.json
+contactscrub --filter dubious --backup suspicious.json
 ```
 
 ### Contact Analysis
@@ -163,13 +163,13 @@ The dubious contact detection system uses a scoring algorithm to identify proble
 
 ```bash
 # Show dubious contacts (default threshold: 3)
-ContactsCLI --filter dubious
+contactscrub --filter dubious
 
 # Show highly dubious contacts (threshold: 5)
-ContactsCLI --filter dubious --dubious-score 5
+contactscrub --filter dubious --dubious-score 5
 
 # Export all dubious contacts
-ContactsCLI --filter dubious --backup dubious.json
+contactscrub --filter dubious --backup dubious.json
 ```
 
 #### Scoring Criteria
@@ -193,20 +193,20 @@ Add filtered contacts to groups:
 
 ```bash
 # Add dubious contacts to "Suspicious" group
-ContactsCLI --filter dubious --add-to-group "Suspicious"
+contactscrub --filter dubious --add-to-group "Suspicious"
 
 # Add Facebook contacts to "Facebook" group
-ContactsCLI --filter facebook --add-to-group "Facebook"
+contactscrub --filter facebook --add-to-group "Facebook"
 ```
 
 ### Advanced Options
 
 ```bash
 # Show all contact fields for debugging
-ContactsCLI --dump
+contactscrub --dump
 
 # Combine multiple options
-ContactsCLI --filter dubious --dubious-score 2 --backup suspicious.json --include-images folder
+contactscrub --filter dubious --dubious-score 2 --backup suspicious.json --include-images folder
 ```
 
 ## Examples
@@ -215,48 +215,48 @@ ContactsCLI --filter dubious --dubious-score 2 --backup suspicious.json --includ
 
 ```bash
 # 1. Identify dubious contacts
-ContactsCLI --filter dubious
+contactscrub --filter dubious
 
 # 2. Export them for review
-ContactsCLI --filter dubious --backup review.json
+contactscrub --filter dubious --backup review.json
 
 # 3. Add them to a group for manual review
-ContactsCLI --filter dubious --add-to-group "Review"
+contactscrub --filter dubious --add-to-group "Review"
 ```
 
 ### Example 2: Export Facebook Contacts
 
 ```bash
 # 1. See how many Facebook contacts you have
-ContactsCLI --filter facebook
+contactscrub --filter facebook
 
 # 2. Export them with images
-ContactsCLI --filter facebook --backup facebook_contacts.json --include-images folder
+contactscrub --filter facebook --backup facebook_contacts.json --include-images folder
 
 # 3. Export only Facebook-exclusive contacts
-ContactsCLI --filter facebook-exclusive --backup facebook_only.xml
+contactscrub --filter facebook-exclusive --backup facebook_only.xml
 ```
 
 ### Example 3: Contact Database Analysis
 
 ```bash
 # 1. Show all contacts
-ContactsCLI --filter all
+contactscrub --filter all
 
 # 2. Show contacts without emails
-ContactsCLI --filter no-email
+contactscrub --filter no-email
 
 # 3. Export comprehensive report
-ContactsCLI --filter dubious --dubious-score 1 --backup full_analysis.json
+contactscrub --filter dubious --dubious-score 1 --backup full_analysis.json
 ```
 
 ## Architecture
 
-ContactsCLI follows a modular architecture with clear separation of concerns:
+contactscrub follows a modular architecture with clear separation of concerns:
 
 ```
-Sources/ContactsCLI/
-├── ContactsCLI.swift         # Main CLI entry point and ArgumentParser setup
+Sources/ContactScrubby/
+├── ContactScrubby.swift       # Main CLI entry point and ArgumentParser setup
 ├── CommandHandlers.swift     # Command operation handlers
 ├── ContactsManager.swift     # Core contact management and analysis
 ├── DisplayUtilities.swift    # Contact formatting and display
@@ -268,7 +268,7 @@ Sources/ContactsCLI/
 
 ### Key Components
 
-- **ContactsCLI**: Main entry point using Swift ArgumentParser
+- **ContactScrubby**: Main entry point using Swift ArgumentParser
 - **CommandHandlers**: Orchestrates different operations (export, display, group management)
 - **ContactsManager**: Core business logic for contact analysis and management
 - **ExportUtilities**: Handles JSON/XML export and image processing
@@ -323,7 +323,7 @@ swift test --enable-code-coverage
 ### Test Structure
 
 ```
-Tests/ContactsCLITests/
+Tests/ContactScrubbyTests/
 ├── CLIIntegrationTests.swift      # Command-line integration tests
 ├── ContactsManagerTests.swift     # Core logic unit tests
 └── ModelsTests.swift             # Data model tests
@@ -359,7 +359,7 @@ Contributions are welcome! Please follow these guidelines:
 
 ## Security and Privacy
 
-ContactsCLI respects user privacy and follows macOS security guidelines:
+contactscrub respects user privacy and follows macOS security guidelines:
 
 - **Permission Requests**: Explicitly requests contact access
 - **Local Processing**: All analysis happens locally on your machine
@@ -390,8 +390,8 @@ swift test --verbose
 
 ### Getting Help
 
-- Check the [Issues](https://github.com/yourusername/ContactsCLI/issues) page
-- Review the [Documentation](https://github.com/yourusername/ContactsCLI/wiki)
+- Check the [Issues](https://github.com/yourusername/ContactScrubby/issues) page
+- Review the [Documentation](https://github.com/yourusername/ContactScrubby/wiki)
 - Contact the maintainers
 
 ## License
@@ -406,4 +406,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-**ContactsCLI** - Making contact management simple and powerful.
+**ContactScrubby** - Making contact management simple and powerful.

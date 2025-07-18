@@ -3,10 +3,10 @@ import Contacts
 import ArgumentParser
 
 @main
-struct ContactsCLI: AsyncParsableCommand {
+struct ContactScrubby: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        commandName: "ContactsCLI",
-        abstract: "A command-line tool for managing and exporting contacts",
+        commandName: "contactscrub",
+        abstract: "A powerful contact scrubbing and management tool",
         version: "1.0.0"
     )
     
