@@ -54,6 +54,7 @@ final class CLIIntegrationTests: XCTestCase {
             ("--filter=facebook-exclusive", .facebookExclusive),
             ("--filter=dubious", .dubious),
             ("--filter=all", .all),
+            ("--filter=no-contact", .noContact),
             ("-f", .all),
             ("-f=dubious", .dubious)
         ]
@@ -156,7 +157,6 @@ final class CLIIntegrationTests: XCTestCase {
     // MARK: - Help and Version Tests
 
     func testHelpOutput() {
-        // Test that help can be requested
         XCTAssertThrowsError(try ContactScrubby.parse(["--help"])) { error in
             // Help should throw some kind of error to exit
             XCTAssertTrue(error is Error)

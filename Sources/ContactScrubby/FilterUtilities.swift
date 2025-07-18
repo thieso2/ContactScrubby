@@ -22,6 +22,8 @@ struct FilterUtilities {
             let hasOnlyFacebookEmails = !facebookEmails.isEmpty && facebookEmails.count == emails.count
             let hasNoPhones = phones.isEmpty
             return hasOnlyFacebookEmails && hasNoPhones
+        case .noContact:
+            return emails.isEmpty && phones.isEmpty
         case .all:
             return true
         case .dubious:

@@ -129,6 +129,10 @@ class ContactsManager {
             case .dubious:
                 // For dubious analysis, we need full contact data, so we'll handle this differently
                 break
+            case .noContact:
+                if emails.isEmpty && phones.isEmpty {
+                    contacts.append((name: displayName, emails: emails, phones: phones))
+                }
             case .all:
                 contacts.append((name: displayName, emails: emails, phones: phones))
             }
@@ -199,17 +203,6 @@ class ContactsManager {
         }
     }
 
-    struct ContactAnalysis {
-        let contact: CNContact
-        let dubiousScore: Int
-        let reasons: [String]
-        let isIncomplete: Bool
-        let isSuspicious: Bool
-
-        func isDubious(minimumScore: Int = 3) -> Bool {
-            dubiousScore >= minimumScore
-        }
-    }
 
     public func analyzeContact(_ contact: CNContact) -> ContactAnalysis {
         var score = 0
@@ -373,6 +366,8 @@ class ContactsManager {
             case .dubious:
                 let analysis = analyzeContact(contact)
                 if !analysis.isDubious(minimumScore: dubiousMinScore) { continue }
+            case .noContact:
+                if !emails.isEmpty || !phones.isEmpty { continue }
             case .all:
                 break
             }
@@ -410,6 +405,8 @@ class ContactsManager {
             case .dubious:
                 let analysis = analyzeContact(contact)
                 if !analysis.isDubious(minimumScore: dubiousMinScore) { continue }
+            case .noContact:
+                if !emails.isEmpty || !phones.isEmpty { continue }
             case .all:
                 break
             }

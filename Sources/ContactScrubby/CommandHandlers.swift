@@ -126,21 +126,96 @@ struct CommandHandlers {
 
     // MARK: - All Fields Operation Handler
 
-    static func handleAllFieldsOperation(manager: ContactsManager) async throws {
-        let fullContacts = try manager.listContactsWithAllFields()
-
-        if fullContacts.isEmpty {
-            print("No contacts found.")
-        } else {
-            print("All contacts with full details:\n")
-
-            for contact in fullContacts {
-                DisplayUtilities.printFullContactDetails(contact)
-                print(String(repeating: "-", count: 50))
-                print()
+    static func handleAllFieldsOperation(
+        manager: ContactsManager,
+        filter: FilterMode,
+        dubiousScore: Int
+    ) async throws {
+        if filter == .dubious {
+            let dubiousAnalyses = try manager.getDubiousContacts(minimumScore: dubiousScore)
+            
+            if dubiousAnalyses.isEmpty {
+                print(MessageUtilities.getEmptyMessage(for: filter))
+            } else {
+                var headerMessage = MessageUtilities.getHeaderMessage(for: filter)
+                if dubiousScore != 3 {
+                    headerMessage += " (minimum score: \(dubiousScore))"
+                }
+                print(headerMessage + " with full details:\n")
+                
+                for analysis in dubiousAnalyses {
+                    let contact = analysis.contact
+                    let fullName = [contact.givenName, contact.familyName]
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " ")
+                    let displayName = fullName.isEmpty ? "No Name" : fullName
+                    
+                    print("== \(displayName) [Dubious Score: \(analysis.dubiousScore)] ==")
+                    print("Issues: \(analysis.reasons.joined(separator: ", "))")
+                    
+                    if analysis.isIncomplete {
+                        print("Status: Incomplete")
+                    }
+                    if analysis.isSuspicious {
+                        print("Status: Suspicious")
+                    }
+                    
+                    print()
+                    DisplayUtilities.printFullContactDetails(contact)
+                    print(String(repeating: "-", count: 50))
+                    print()
+                }
+                
+                print("Total: \(dubiousAnalyses.count) dubious contact(s)")
             }
-
-            print("Total: \(fullContacts.count) contact(s)")
+        } else {
+            let fullContacts = try manager.listContactsWithAllFields()
+            var filteredContacts: [CNContact] = []
+            
+            // Apply the same filtering logic as in handleDisplayOperation
+            for contact in fullContacts {
+                let emails = contact.emailAddresses.map { $0.value as String }
+                let phones = contact.phoneNumbers.map { $0.value.stringValue }
+                
+                // Apply filter
+                switch filter {
+                case .withEmail:
+                    if emails.isEmpty { continue }
+                case .withoutEmail:
+                    if !emails.isEmpty { continue }
+                case .facebookOnly:
+                    let facebookEmails = emails.filter { $0.lowercased().hasSuffix("@facebook.com") }
+                    if facebookEmails.isEmpty { continue }
+                case .facebookExclusive:
+                    let facebookEmails = emails.filter { $0.lowercased().hasSuffix("@facebook.com") }
+                    let hasOnlyFacebookEmails = !facebookEmails.isEmpty && facebookEmails.count == emails.count
+                    let hasNoPhones = phones.isEmpty
+                    if !(hasOnlyFacebookEmails && hasNoPhones) { continue }
+                case .dubious:
+                    let analysis = manager.analyzeContact(contact)
+                    if !analysis.isDubious(minimumScore: dubiousScore) { continue }
+                case .noContact:
+                    if !emails.isEmpty || !phones.isEmpty { continue }
+                case .all:
+                    break // Include all contacts
+                }
+                
+                filteredContacts.append(contact)
+            }
+            
+            if filteredContacts.isEmpty {
+                print(MessageUtilities.getEmptyMessage(for: filter))
+            } else {
+                print(MessageUtilities.getHeaderMessage(for: filter) + " with full details:\n")
+                
+                for contact in filteredContacts {
+                    DisplayUtilities.printFullContactDetails(contact)
+                    print(String(repeating: "-", count: 50))
+                    print()
+                }
+                
+                print("Total: \(filteredContacts.count) contact(s)")
+            }
         }
     }
 
@@ -214,6 +289,8 @@ struct CommandHandlers {
                 case .dubious:
                     let analysis = manager.analyzeContact(contact)
                     if !analysis.isDubious(minimumScore: dubiousScore) { continue }
+                case .noContact:
+                    if !emails.isEmpty || !phones.isEmpty { continue }
                 case .all:
                     break // Include all contacts
                 }

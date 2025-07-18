@@ -18,6 +18,8 @@ struct MessageUtilities {
             return "No dubious or incomplete contacts found."
         case .all:
             return "No contacts found."
+        case .noContact:
+            return "No contacts without both email and phone numbers found."
         }
     }
 
@@ -35,6 +37,8 @@ struct MessageUtilities {
             return "Dubious or incomplete contacts:"
         case .all:
             return "All contacts:"
+        case .noContact:
+            return "Contacts with no email AND no phone:"
         }
     }
 }

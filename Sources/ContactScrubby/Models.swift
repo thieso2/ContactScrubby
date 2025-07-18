@@ -9,6 +9,7 @@ enum FilterMode: String, ExpressibleByArgument, CaseIterable {
     case facebookExclusive = "facebook-exclusive"
     case dubious = "dubious"
     case all = "all"
+    case noContact = "no-contact"
 
     var help: String {
         switch self {
@@ -24,6 +25,8 @@ enum FilterMode: String, ExpressibleByArgument, CaseIterable {
             return "List dubious/incomplete contacts (likely auto-imports)"
         case .all:
             return "List all contacts (default)"
+        case .noContact:
+            return "List contacts with no email AND no phone"
         }
     }
 }
@@ -116,4 +119,32 @@ struct MergeResult {
     let fieldsMerged: Int
     let success: Bool
     let error: String?
+}
+
+// MARK: - Contact Analysis
+
+public struct ContactAnalysis {
+    public let contact: CNContact
+    public let dubiousScore: Int
+    public let reasons: [String]
+    public let isIncomplete: Bool
+    public let isSuspicious: Bool
+    
+    public init(
+        contact: CNContact,
+        dubiousScore: Int,
+        reasons: [String],
+        isIncomplete: Bool,
+        isSuspicious: Bool
+    ) {
+        self.contact = contact
+        self.dubiousScore = dubiousScore
+        self.reasons = reasons
+        self.isIncomplete = isIncomplete
+        self.isSuspicious = isSuspicious
+    }
+    
+    public func isDubious(minimumScore: Int = 3) -> Bool {
+        dubiousScore >= minimumScore
+    }
 }

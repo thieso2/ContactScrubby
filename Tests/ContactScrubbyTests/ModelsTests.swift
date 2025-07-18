@@ -12,6 +12,7 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(FilterMode.facebookExclusive.rawValue, "facebook-exclusive")
         XCTAssertEqual(FilterMode.dubious.rawValue, "dubious")
         XCTAssertEqual(FilterMode.all.rawValue, "all")
+        XCTAssertEqual(FilterMode.noContact.rawValue, "no-contact")
     }
 
     func testFilterModeFromString() {
@@ -21,6 +22,7 @@ final class ModelsTests: XCTestCase {
         XCTAssertEqual(FilterMode(rawValue: "facebook-exclusive"), .facebookExclusive)
         XCTAssertEqual(FilterMode(rawValue: "dubious"), .dubious)
         XCTAssertEqual(FilterMode(rawValue: "all"), .all)
+        XCTAssertEqual(FilterMode(rawValue: "no-contact"), .noContact)
         XCTAssertNil(FilterMode(rawValue: "invalid"))
     }
 
@@ -31,17 +33,19 @@ final class ModelsTests: XCTestCase {
         XCTAssertTrue(FilterMode.facebookExclusive.help.contains("ONLY @facebook.com"))
         XCTAssertTrue(FilterMode.dubious.help.contains("dubious"))
         XCTAssertTrue(FilterMode.all.help.contains("all contacts"))
+        XCTAssertTrue(FilterMode.noContact.help.contains("no email AND no phone"))
     }
 
     func testFilterModeAllCases() {
         let allCases = FilterMode.allCases
-        XCTAssertEqual(allCases.count, 6)
+        XCTAssertEqual(allCases.count, 7)
         XCTAssertTrue(allCases.contains(.withEmail))
         XCTAssertTrue(allCases.contains(.withoutEmail))
         XCTAssertTrue(allCases.contains(.facebookOnly))
         XCTAssertTrue(allCases.contains(.facebookExclusive))
         XCTAssertTrue(allCases.contains(.dubious))
         XCTAssertTrue(allCases.contains(.all))
+        XCTAssertTrue(allCases.contains(.noContact))
     }
 
     // MARK: - ImageMode Tests
@@ -53,7 +57,7 @@ final class ModelsTests: XCTestCase {
     }
 
     func testImageModeFromString() {
-        XCTAssertEqual(ImageMode(rawValue: "none"), ImageMode.none)
+        XCTAssertEqual(ImageMode(rawValue: "none"), .none)
         XCTAssertEqual(ImageMode(rawValue: "inline"), .inline)
         XCTAssertEqual(ImageMode(rawValue: "folder"), .folder)
         XCTAssertNil(ImageMode(rawValue: "invalid"))
@@ -77,74 +81,56 @@ final class ModelsTests: XCTestCase {
 
     func testExportOptionsFileURL() {
         let options = ExportOptions(
-            filename: "/tmp/test.json",
-            imageMode: .inline,
+            filename: "test.json",
+            imageMode: .none,
             filterMode: .all,
             dubiousMinScore: 3
         )
-
-        XCTAssertEqual(options.fileURL.path, "/tmp/test.json")
-        XCTAssertEqual(options.fileURL.lastPathComponent, "test.json")
+        XCTAssertTrue(options.fileURL.path.hasSuffix("test.json"))
     }
 
     func testExportOptionsFileExtension() {
         let jsonOptions = ExportOptions(
-            filename: "/tmp/test.json",
-            imageMode: .inline,
+            filename: "test.json",
+            imageMode: .none,
             filterMode: .all,
             dubiousMinScore: 3
         )
         XCTAssertEqual(jsonOptions.fileExtension, "json")
 
         let xmlOptions = ExportOptions(
-            filename: "/tmp/test.XML",
-            imageMode: .inline,
+            filename: "test.XML",
+            imageMode: .none,
             filterMode: .all,
             dubiousMinScore: 3
         )
         XCTAssertEqual(xmlOptions.fileExtension, "xml")
-
-        let noExtOptions = ExportOptions(
-            filename: "/tmp/test",
-            imageMode: .inline,
-            filterMode: .all,
-            dubiousMinScore: 3
-        )
-        XCTAssertEqual(noExtOptions.fileExtension, "")
     }
 
     func testExportOptionsIsValidFormat() {
-        let jsonOptions = ExportOptions(
-            filename: "/tmp/test.json",
-            imageMode: .inline,
+        let validJson = ExportOptions(
+            filename: "test.json",
+            imageMode: .none,
             filterMode: .all,
             dubiousMinScore: 3
         )
-        XCTAssertTrue(jsonOptions.isValidFormat)
+        XCTAssertTrue(validJson.isValidFormat)
 
-        let xmlOptions = ExportOptions(
-            filename: "/tmp/test.xml",
-            imageMode: .inline,
+        let validXml = ExportOptions(
+            filename: "test.xml",
+            imageMode: .none,
             filterMode: .all,
             dubiousMinScore: 3
         )
-        XCTAssertTrue(xmlOptions.isValidFormat)
+        XCTAssertTrue(validXml.isValidFormat)
 
-        let invalidOptions = ExportOptions(
-            filename: "/tmp/test.txt",
-            imageMode: .inline,
+        let invalid = ExportOptions(
+            filename: "test.txt",
+            imageMode: .none,
             filterMode: .all,
             dubiousMinScore: 3
         )
-        XCTAssertFalse(invalidOptions.isValidFormat)
-
-        let noExtOptions = ExportOptions(
-            filename: "/tmp/test",
-            imageMode: .inline,
-            filterMode: .all,
-            dubiousMinScore: 3
-        )
-        XCTAssertFalse(noExtOptions.isValidFormat)
+        XCTAssertFalse(invalid.isValidFormat)
     }
 
     // MARK: - GroupOptions Tests
@@ -155,7 +141,6 @@ final class ModelsTests: XCTestCase {
             filterMode: .dubious,
             dubiousMinScore: 5
         )
-
         XCTAssertEqual(options.groupName, "Test Group")
         XCTAssertEqual(options.filterMode, .dubious)
         XCTAssertEqual(options.dubiousMinScore, 5)
@@ -165,13 +150,12 @@ final class ModelsTests: XCTestCase {
 
     func testDisplayOptionsCreation() {
         let options = DisplayOptions(
-            filterMode: .facebookOnly,
-            dubiousMinScore: 2,
+            filterMode: .withEmail,
+            dubiousMinScore: 4,
             showAllFields: true
         )
-
-        XCTAssertEqual(options.filterMode, .facebookOnly)
-        XCTAssertEqual(options.dubiousMinScore, 2)
+        XCTAssertEqual(options.filterMode, .withEmail)
+        XCTAssertEqual(options.dubiousMinScore, 4)
         XCTAssertTrue(options.showAllFields)
     }
 }

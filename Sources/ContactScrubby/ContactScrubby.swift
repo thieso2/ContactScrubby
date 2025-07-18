@@ -103,7 +103,11 @@ struct ContactScrubby: AsyncParsableCommand {
 
         // Handle all fields display
         if allFields {
-            try await CommandHandlers.handleAllFieldsOperation(manager: manager)
+            try await CommandHandlers.handleAllFieldsOperation(
+                manager: manager,
+                filter: filter,
+                dubiousScore: dubiousScore
+            )
             return
         }
 
