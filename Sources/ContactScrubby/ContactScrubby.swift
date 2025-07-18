@@ -7,7 +7,7 @@ struct ContactScrubby: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "contactscrub",
         abstract: "A powerful contact scrubbing and management tool",
-        version: "1.0.0"
+        version: "0.1"
     )
 
     @Option(name: .shortAndLong, help: "Filter mode for contacts")
@@ -29,6 +29,16 @@ struct ContactScrubby: AsyncParsableCommand {
     var addToGroup: String?
 
     func run() async throws {
+        // Check if no arguments were provided (all options are at their default values)
+        if filter == .withEmail && dubiousScore == 3 && !dump && backup == nil && 
+           includeImages == .none && addToGroup == nil {
+            // Check if we're being called with no arguments at all
+            if CommandLine.arguments.count == 1 {
+                print(ContactScrubby.helpMessage())
+                return
+            }
+        }
+
         let manager = ContactsManager()
 
         let granted = try await manager.requestAccess()

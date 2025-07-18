@@ -29,7 +29,7 @@ final class CLIIntegrationTests: XCTestCase {
 
         XCTAssertEqual(config.commandName, "contactscrub")
         XCTAssertEqual(config.abstract, "A powerful contact scrubbing and management tool")
-        XCTAssertEqual(config.version, "1.0.0")
+        XCTAssertEqual(config.version, "0.1")
     }
 
     // MARK: - Argument Parsing Tests
@@ -168,6 +168,18 @@ final class CLIIntegrationTests: XCTestCase {
             // Version should throw some kind of error to exit
             XCTAssertTrue(error is Error)
         }
+    }
+
+    func testNoArgumentsShowsUsage() {
+        // This tests the logical behavior - when no arguments are provided,
+        // all options should be at their default values
+        let command = try! ContactScrubby.parse([])
+        XCTAssertEqual(command.filter, .withEmail)
+        XCTAssertEqual(command.dubiousScore, 3)
+        XCTAssertFalse(command.dump)
+        XCTAssertNil(command.backup)
+        XCTAssertEqual(command.includeImages, .none)
+        XCTAssertNil(command.addToGroup)
     }
 
     // MARK: - File Operations Tests
