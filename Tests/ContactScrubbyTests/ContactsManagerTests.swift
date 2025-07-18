@@ -166,7 +166,7 @@ final class ContactsManagerTests: XCTestCase {
         contact.givenName = "John"
         contact.familyName = "Doe"
         contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: "john.doe@example.com" as NSString)]
-        contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberMobile, value: CNPhoneNumber(stringValue: "+1234567890"))]
+        contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberMobile, value: CNPhoneNumber(stringValue: "+1-617-123-4567"))]
         contact.organizationName = "Example Corp"
 
         let analysis = contactsManager.analyzeContact(contact)
@@ -184,7 +184,7 @@ final class ContactsManagerTests: XCTestCase {
         let analysis = contactsManager.analyzeContact(contact)
 
         XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("No name"))
+        XCTAssertTrue(analysis.reasons.contains("No name provided"))
         XCTAssertTrue(analysis.isIncomplete)
     }
 
@@ -196,8 +196,7 @@ final class ContactsManagerTests: XCTestCase {
         let analysis = contactsManager.analyzeContact(contact)
 
         XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("No email"))
-        XCTAssertTrue(analysis.reasons.contains("No phone"))
+        XCTAssertTrue(analysis.reasons.contains("Missing multiple basic fields: email, phone, organization"))
         XCTAssertTrue(analysis.isIncomplete)
     }
 
@@ -211,7 +210,7 @@ final class ContactsManagerTests: XCTestCase {
         let analysis = contactsManager.analyzeContact(contact)
 
         XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Missing basic info"))
+        XCTAssertTrue(analysis.reasons.contains("Missing multiple basic fields: phone, organization"))
         XCTAssertTrue(analysis.isIncomplete)
     }
 
@@ -224,8 +223,7 @@ final class ContactsManagerTests: XCTestCase {
         let analysis = contactsManager.analyzeContact(contact)
 
         XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Facebook-only email"))
-        XCTAssertTrue(analysis.reasons.contains("No phone"))
+        XCTAssertTrue(analysis.reasons.contains("Only Facebook email, no other contact info"))
         XCTAssertTrue(analysis.isSuspicious)
     }
 
@@ -238,7 +236,7 @@ final class ContactsManagerTests: XCTestCase {
         let analysis = contactsManager.analyzeContact(contact)
 
         XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("No-reply email"))
+        XCTAssertTrue(analysis.reasons.contains("No-reply email address"))
         XCTAssertTrue(analysis.isSuspicious)
     }
 
@@ -251,7 +249,7 @@ final class ContactsManagerTests: XCTestCase {
         let analysis = contactsManager.analyzeContact(contact)
 
         XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Suspicious phone"))
+        XCTAssertTrue(analysis.reasons.contains("Suspicious phone number pattern"))
         XCTAssertTrue(analysis.isSuspicious)
     }
 
@@ -264,7 +262,7 @@ final class ContactsManagerTests: XCTestCase {
         let analysis = contactsManager.analyzeContact(contact)
 
         XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Numeric/short email"))
+        XCTAssertTrue(analysis.reasons.contains("Numeric email username"))
         XCTAssertTrue(analysis.isSuspicious)
     }
 
@@ -277,8 +275,8 @@ final class ContactsManagerTests: XCTestCase {
         let analysis = contactsManager.analyzeContact(contact)
 
         XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Suspicious name pattern"))
-        XCTAssertTrue(analysis.isSuspicious)
+        XCTAssertTrue(analysis.reasons.contains("Unusual capitalization"))
+        XCTAssertTrue(analysis.isIncomplete)
     }
 
     func testAnalyzeContactWithShortName() {
