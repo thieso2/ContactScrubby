@@ -239,7 +239,7 @@ class ContactsManager {
             }
             
             // Single character names
-            if fullName.count <= 2 {
+            if fullName.replacingOccurrences(of: " ", with: "").count <= 2 {
                 score += 2
                 reasons.append("Very short name")
                 isSuspicious = true
