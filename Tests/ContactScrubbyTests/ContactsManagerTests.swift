@@ -1,24 +1,14 @@
-import XCTest
+import Testing
 import Contacts
 @testable import ContactScrubby
 
-final class ContactsManagerTests: XCTestCase {
-
-    var contactsManager: ContactsManager!
-
-    override func setUp() {
-        super.setUp()
-        contactsManager = ContactsManager()
-    }
-
-    override func tearDown() {
-        contactsManager = nil
-        super.tearDown()
-    }
+@Suite("ContactsManager Tests")
+struct ContactsManagerTests {
 
     // MARK: - SerializableContact Tests
 
-    func testSerializableContactCreation() {
+    @Test("SerializableContact creation")
+    func serializableContactCreation() {
         let contact = SerializableContact(
             name: "John Doe",
             namePrefix: "Mr.",
@@ -48,27 +38,28 @@ final class ContactsManagerTests: XCTestCase {
             note: "Test contact"
         )
 
-        XCTAssertEqual(contact.name, "John Doe")
-        XCTAssertEqual(contact.namePrefix, "Mr.")
-        XCTAssertEqual(contact.givenName, "John")
-        XCTAssertEqual(contact.middleName, "William")
-        XCTAssertEqual(contact.familyName, "Doe")
-        XCTAssertEqual(contact.nameSuffix, "Jr.")
-        XCTAssertEqual(contact.nickname, "Johnny")
-        XCTAssertEqual(contact.organizationName, "Apple Inc.")
-        XCTAssertEqual(contact.departmentName, "Engineering")
-        XCTAssertEqual(contact.jobTitle, "Software Engineer")
-        XCTAssertEqual(contact.emails.count, 1)
-        XCTAssertEqual(contact.emails[0].label, "work")
-        XCTAssertEqual(contact.emails[0].value, "john@apple.com")
-        XCTAssertEqual(contact.phones.count, 1)
-        XCTAssertEqual(contact.phones[0].label, "mobile")
-        XCTAssertEqual(contact.phones[0].value, "+1234567890")
-        XCTAssertEqual(contact.note, "Test contact")
-        XCTAssertFalse(contact.hasImage)
+        #expect(contact.name == "John Doe")
+        #expect(contact.namePrefix == "Mr.")
+        #expect(contact.givenName == "John")
+        #expect(contact.middleName == "William")
+        #expect(contact.familyName == "Doe")
+        #expect(contact.nameSuffix == "Jr.")
+        #expect(contact.nickname == "Johnny")
+        #expect(contact.organizationName == "Apple Inc.")
+        #expect(contact.departmentName == "Engineering")
+        #expect(contact.jobTitle == "Software Engineer")
+        #expect(contact.emails.count == 1)
+        #expect(contact.emails[0].label == "work")
+        #expect(contact.emails[0].value == "john@apple.com")
+        #expect(contact.phones.count == 1)
+        #expect(contact.phones[0].label == "mobile")
+        #expect(contact.phones[0].value == "+1234567890")
+        #expect(contact.note == "Test contact")
+        #expect(contact.hasImage == false)
     }
 
-    func testSerializableContactCodable() throws {
+    @Test("SerializableContact Codable")
+    func serializableContactCodable() throws {
         let originalContact = SerializableContact(
             name: "Jane Smith",
             namePrefix: nil,
@@ -104,18 +95,19 @@ final class ContactsManagerTests: XCTestCase {
         let decoder = JSONDecoder()
         let decodedContact = try decoder.decode(SerializableContact.self, from: data)
 
-        XCTAssertEqual(decodedContact.name, originalContact.name)
-        XCTAssertEqual(decodedContact.givenName, originalContact.givenName)
-        XCTAssertEqual(decodedContact.familyName, originalContact.familyName)
-        XCTAssertEqual(decodedContact.emails.count, originalContact.emails.count)
-        XCTAssertEqual(decodedContact.birthday?.day, 15)
-        XCTAssertEqual(decodedContact.birthday?.month, 6)
-        XCTAssertEqual(decodedContact.birthday?.year, 1990)
+        #expect(decodedContact.name == originalContact.name)
+        #expect(decodedContact.givenName == originalContact.givenName)
+        #expect(decodedContact.familyName == originalContact.familyName)
+        #expect(decodedContact.emails.count == originalContact.emails.count)
+        #expect(decodedContact.birthday?.day == 15)
+        #expect(decodedContact.birthday?.month == 6)
+        #expect(decodedContact.birthday?.year == 1990)
     }
 
     // MARK: - ContactAnalysis Tests
 
-    func testContactAnalysisCreation() {
+    @Test("ContactAnalysis creation")
+    func contactAnalysisCreation() {
         let contact = CNMutableContact()
         contact.givenName = "Test"
         contact.familyName = "User"
@@ -128,13 +120,14 @@ final class ContactsManagerTests: XCTestCase {
             isSuspicious: false
         )
 
-        XCTAssertEqual(analysis.dubiousScore, 5)
-        XCTAssertEqual(analysis.reasons.count, 2)
-        XCTAssertTrue(analysis.isIncomplete)
-        XCTAssertFalse(analysis.isSuspicious)
+        #expect(analysis.dubiousScore == 5)
+        #expect(analysis.reasons.count == 2)
+        #expect(analysis.isIncomplete == true)
+        #expect(analysis.isSuspicious == false)
     }
 
-    func testContactAnalysisIsDubious() {
+    @Test("ContactAnalysis isDubious")
+    func contactAnalysisIsDubious() {
         let contact = CNMutableContact()
 
         let lowScoreAnalysis = ContactAnalysis(
@@ -153,15 +146,16 @@ final class ContactsManagerTests: XCTestCase {
             isSuspicious: false
         )
 
-        XCTAssertFalse(lowScoreAnalysis.isDubious(minimumScore: 3))
-        XCTAssertTrue(highScoreAnalysis.isDubious(minimumScore: 3))
-        XCTAssertTrue(highScoreAnalysis.isDubious(minimumScore: 5))
-        XCTAssertFalse(highScoreAnalysis.isDubious(minimumScore: 6))
+        #expect(lowScoreAnalysis.isDubious(minimumScore: 3) == false)
+        #expect(highScoreAnalysis.isDubious(minimumScore: 3) == true)
+        #expect(highScoreAnalysis.isDubious(minimumScore: 5) == true)
+        #expect(highScoreAnalysis.isDubious(minimumScore: 6) == false)
     }
 
     // MARK: - Contact Analysis Tests
 
-    func testAnalyzeContactWithCompleteInfo() {
+    @Test("Analyze contact with complete info")
+    func analyzeContactWithCompleteInfo() {
         let contact = CNMutableContact()
         contact.givenName = "John"
         contact.familyName = "Doe"
@@ -169,179 +163,203 @@ final class ContactsManagerTests: XCTestCase {
         contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberMobile, value: CNPhoneNumber(stringValue: "+1-617-123-4567"))]
         contact.organizationName = "Example Corp"
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertEqual(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.isEmpty)
-        XCTAssertFalse(analysis.isIncomplete)
-        XCTAssertFalse(analysis.isSuspicious)
+        #expect(analysis.dubiousScore == 0)
+        #expect(analysis.reasons.isEmpty == true)
+        #expect(analysis.isIncomplete == false)
+        #expect(analysis.isSuspicious == false)
     }
 
-    func testAnalyzeContactWithNoName() {
+    @Test("Analyze contact with no name")
+    func analyzeContactWithNoName() {
         let contact = CNMutableContact()
         contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: "user@example.com" as NSString)]
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("No name provided"))
-        XCTAssertTrue(analysis.isIncomplete)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("No name provided"))
+        #expect(analysis.isIncomplete == true)
     }
 
-    func testAnalyzeContactWithOnlyBasicInfo() {
+    @Test("Analyze contact with only basic info")
+    func analyzeContactWithOnlyBasicInfo() {
         let contact = CNMutableContact()
         contact.givenName = "John"
         contact.familyName = "Doe"
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Missing multiple basic fields: email, phone, organization"))
-        XCTAssertTrue(analysis.isIncomplete)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("Missing multiple basic fields: email, phone, organization"))
+        #expect(analysis.isIncomplete == true)
     }
 
-    func testAnalyzeContactWithMissingBasicInfo() {
+    @Test("Analyze contact with missing basic info")
+    func analyzeContactWithMissingBasicInfo() {
         let contact = CNMutableContact()
         contact.givenName = "John"
         // Missing family name
         contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: "john@example.com" as NSString)]
         // Missing phone
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Missing multiple basic fields: phone, organization"))
-        XCTAssertTrue(analysis.isIncomplete)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("Missing multiple basic fields: phone, organization"))
+        #expect(analysis.isIncomplete == true)
     }
 
-    func testAnalyzeContactWithFacebookOnlyEmail() {
+    @Test("Analyze contact with Facebook-only email")
+    func analyzeContactWithFacebookOnlyEmail() {
         let contact = CNMutableContact()
         contact.givenName = "Facebook"
         contact.familyName = "User"
         contact.emailAddresses = [CNLabeledValue(label: CNLabelOther, value: "user@facebook.com" as NSString)]
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Only Facebook email, no other contact info"))
-        XCTAssertTrue(analysis.isSuspicious)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("Only Facebook email, no other contact info"))
+        #expect(analysis.isSuspicious == true)
     }
 
-    func testAnalyzeContactWithNoReplyEmail() {
+    @Test("Analyze contact with no-reply email")
+    func analyzeContactWithNoReplyEmail() {
         let contact = CNMutableContact()
         contact.givenName = "Service"
         contact.familyName = "Account"
         contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: "noreply@example.com" as NSString)]
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("No-reply email address"))
-        XCTAssertTrue(analysis.isSuspicious)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("No-reply email address"))
+        #expect(analysis.isSuspicious == true)
     }
 
-    func testAnalyzeContactWithSuspiciousPhone() {
+    @Test("Analyze contact with suspicious phone")
+    func analyzeContactWithSuspiciousPhone() {
         let contact = CNMutableContact()
         contact.givenName = "Test"
         contact.familyName = "User"
         contact.phoneNumbers = [CNLabeledValue(label: CNLabelPhoneNumberMobile, value: CNPhoneNumber(stringValue: "000-000-0000"))]
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Suspicious phone number pattern"))
-        XCTAssertTrue(analysis.isSuspicious)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("Suspicious phone number pattern"))
+        #expect(analysis.isSuspicious == true)
     }
 
-    func testAnalyzeContactWithNumericEmail() {
+    @Test("Analyze contact with numeric email")
+    func analyzeContactWithNumericEmail() {
         let contact = CNMutableContact()
         contact.givenName = "User"
         contact.familyName = "Test"
         contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: "12345@example.com" as NSString)]
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Numeric email username"))
-        XCTAssertTrue(analysis.isSuspicious)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("Numeric email username"))
+        #expect(analysis.isSuspicious == true)
     }
 
-    func testAnalyzeContactWithSuspiciousName() {
+    @Test("Analyze contact with suspicious name")
+    func analyzeContactWithSuspiciousName() {
         let contact = CNMutableContact()
         contact.givenName = "aaa"
         contact.familyName = "bbb"
         contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: "test@example.com" as NSString)]
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Unusual capitalization"))
-        XCTAssertTrue(analysis.isIncomplete)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("Unusual capitalization"))
+        #expect(analysis.isIncomplete == true)
     }
 
-    func testAnalyzeContactWithShortName() {
+    @Test("Analyze contact with short name")
+    func analyzeContactWithShortName() {
         let contact = CNMutableContact()
         contact.givenName = "J"
         contact.familyName = "D"
         contact.emailAddresses = [CNLabeledValue(label: CNLabelWork, value: "jd@example.com" as NSString)]
 
+        let contactsManager = ContactsManager()
         let analysis = contactsManager.analyzeContact(contact)
 
-        XCTAssertGreaterThan(analysis.dubiousScore, 0)
-        XCTAssertTrue(analysis.reasons.contains("Very short name"))
-        XCTAssertTrue(analysis.isSuspicious)
+        #expect(analysis.dubiousScore > 0)
+        #expect(analysis.reasons.contains("Very short name"))
+        #expect(analysis.isSuspicious == true)
     }
 
     // MARK: - Utility Functions Tests
 
-    func testFormatLabel() {
-        XCTAssertEqual(ContactScrubby.formatLabel(CNLabelHome), "home")
-        XCTAssertEqual(ContactScrubby.formatLabel(CNLabelWork), "work")
-        XCTAssertEqual(ContactScrubby.formatLabel(CNLabelOther), "other")
-        XCTAssertEqual(ContactScrubby.formatLabel(CNLabelPhoneNumberMobile), "mobile")
-        XCTAssertEqual(ContactScrubby.formatLabel(CNLabelPhoneNumberMain), "main")
-        XCTAssertEqual(ContactScrubby.formatLabel("_$!<Mobile>!$_"), "mobile")
-        XCTAssertEqual(ContactScrubby.formatLabel("CustomLabel"), "CustomLabel")
-        XCTAssertEqual(ContactScrubby.formatLabel(nil), "other")
-        XCTAssertEqual(ContactScrubby.formatLabel(""), "other")
+    @Test("Format label")
+    func formatLabel() {
+        #expect(ContactScrubby.formatLabel(CNLabelHome) == "home")
+        #expect(ContactScrubby.formatLabel(CNLabelWork) == "work")
+        #expect(ContactScrubby.formatLabel(CNLabelOther) == "other")
+        #expect(ContactScrubby.formatLabel(CNLabelPhoneNumberMobile) == "mobile")
+        #expect(ContactScrubby.formatLabel(CNLabelPhoneNumberMain) == "main")
+        #expect(ContactScrubby.formatLabel("_$!<Mobile>!$_") == "mobile")
+        #expect(ContactScrubby.formatLabel("CustomLabel") == "CustomLabel")
+        #expect(ContactScrubby.formatLabel(nil) == "other")
+        #expect(ContactScrubby.formatLabel("") == "other")
     }
 
-    func testGetEmptyMessage() {
-        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .withEmail), "No contacts with email addresses found.")
-        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .withoutEmail), "No contacts without email addresses found.")
-        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .facebookOnly), "No contacts with @facebook.com email addresses found.")
-        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .facebookExclusive), "No contacts with only @facebook.com email addresses and no phone numbers found.")
-        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .dubious), "No dubious or incomplete contacts found.")
-        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .all), "No contacts found.")
-        XCTAssertEqual(ContactScrubby.getEmptyMessage(for: .noContact), "No contacts without both email and phone numbers found.")
+    @Test("Get empty message")
+    func getEmptyMessage() {
+        #expect(ContactScrubby.getEmptyMessage(for: .withEmail) == "No contacts with email addresses found.")
+        #expect(ContactScrubby.getEmptyMessage(for: .withoutEmail) == "No contacts without email addresses found.")
+        #expect(ContactScrubby.getEmptyMessage(for: .facebookOnly) == "No contacts with @facebook.com email addresses found.")
+        #expect(ContactScrubby.getEmptyMessage(for: .facebookExclusive) == "No contacts with only @facebook.com email addresses and no phone numbers found.")
+        #expect(ContactScrubby.getEmptyMessage(for: .dubious) == "No dubious or incomplete contacts found.")
+        #expect(ContactScrubby.getEmptyMessage(for: .all) == "No contacts found.")
+        #expect(ContactScrubby.getEmptyMessage(for: .noContact) == "No contacts without both email and phone numbers found.")
     }
 
-    func testGetHeaderMessage() {
-        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .withEmail), "Contacts with email addresses:")
-        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .withoutEmail), "Contacts without email addresses:")
-        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .facebookOnly), "Contacts with @facebook.com email addresses:")
-        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .facebookExclusive), "Contacts with ONLY @facebook.com email addresses and no phone numbers:")
-        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .dubious), "Dubious or incomplete contacts:")
-        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .all), "All contacts:")
-        XCTAssertEqual(ContactScrubby.getHeaderMessage(for: .noContact), "Contacts with no email AND no phone:")
+    @Test("Get header message")
+    func getHeaderMessage() {
+        #expect(ContactScrubby.getHeaderMessage(for: .withEmail) == "Contacts with email addresses:")
+        #expect(ContactScrubby.getHeaderMessage(for: .withoutEmail) == "Contacts without email addresses:")
+        #expect(ContactScrubby.getHeaderMessage(for: .facebookOnly) == "Contacts with @facebook.com email addresses:")
+        #expect(ContactScrubby.getHeaderMessage(for: .facebookExclusive) == "Contacts with ONLY @facebook.com email addresses and no phone numbers:")
+        #expect(ContactScrubby.getHeaderMessage(for: .dubious) == "Dubious or incomplete contacts:")
+        #expect(ContactScrubby.getHeaderMessage(for: .all) == "All contacts:")
+        #expect(ContactScrubby.getHeaderMessage(for: .noContact) == "Contacts with no email AND no phone:")
     }
 
-    func testSanitizeFilename() {
-        XCTAssertEqual(ContactScrubby.sanitizeFilename("Normal Name"), "Normal Name")
-        XCTAssertEqual(ContactScrubby.sanitizeFilename("Name/With\\Slashes"), "Name_With_Slashes")
-        XCTAssertEqual(ContactScrubby.sanitizeFilename("Name:With*Special?Chars"), "Name_With_Special_Chars")
-        XCTAssertEqual(ContactScrubby.sanitizeFilename("Name\"With<Quotes>"), "Name_With_Quotes_")
-        XCTAssertEqual(ContactScrubby.sanitizeFilename("Name|With|Pipes"), "Name_With_Pipes")
-        XCTAssertEqual(ContactScrubby.sanitizeFilename(""), "unnamed")
-        XCTAssertEqual(ContactScrubby.sanitizeFilename("   "), "unnamed")
+    @Test("Sanitize filename")
+    func sanitizeFilename() {
+        #expect(ContactScrubby.sanitizeFilename("Normal Name") == "Normal Name")
+        #expect(ContactScrubby.sanitizeFilename("Name/With\\Slashes") == "Name_With_Slashes")
+        #expect(ContactScrubby.sanitizeFilename("Name:With*Special?Chars") == "Name_With_Special_Chars")
+        #expect(ContactScrubby.sanitizeFilename("Name\"With<Quotes>") == "Name_With_Quotes_")
+        #expect(ContactScrubby.sanitizeFilename("Name|With|Pipes") == "Name_With_Pipes")
+        #expect(ContactScrubby.sanitizeFilename("") == "unnamed")
+        #expect(ContactScrubby.sanitizeFilename("   ") == "unnamed")
     }
 
-    func testEscapeXML() {
-        XCTAssertEqual(ContactScrubby.escapeXML("Normal text"), "Normal text")
-        XCTAssertEqual(ContactScrubby.escapeXML("Text with & ampersand"), "Text with &amp; ampersand")
-        XCTAssertEqual(ContactScrubby.escapeXML("Text with < and >"), "Text with &lt; and &gt;")
-        XCTAssertEqual(ContactScrubby.escapeXML("Text with \"quotes\""), "Text with &quot;quotes&quot;")
-        XCTAssertEqual(ContactScrubby.escapeXML("Text with 'apostrophe'"), "Text with &apos;apostrophe&apos;")
-        XCTAssertEqual(ContactScrubby.escapeXML("All: & < > \" '"), "All: &amp; &lt; &gt; &quot; &apos;")
+    @Test("Escape XML")
+    func escapeXML() {
+        #expect(ContactScrubby.escapeXML("Normal text") == "Normal text")
+        #expect(ContactScrubby.escapeXML("Text with & ampersand") == "Text with &amp; ampersand")
+        #expect(ContactScrubby.escapeXML("Text with < and >") == "Text with &lt; and &gt;")
+        #expect(ContactScrubby.escapeXML("Text with \"quotes\"") == "Text with &quot;quotes&quot;")
+        #expect(ContactScrubby.escapeXML("Text with 'apostrophe'") == "Text with &apos;apostrophe&apos;")
+        #expect(ContactScrubby.escapeXML("All: & < > \" '") == "All: &amp; &lt; &gt; &quot; &apos;")
     }
 }
