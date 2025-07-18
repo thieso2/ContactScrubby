@@ -124,9 +124,9 @@ struct CommandHandlers {
         }
     }
 
-    // MARK: - Dump Operation Handler
+    // MARK: - All Fields Operation Handler
 
-    static func handleDumpOperation(manager: ContactsManager) async throws {
+    static func handleAllFieldsOperation(manager: ContactsManager) async throws {
         let fullContacts = try manager.listContactsWithAllFields()
 
         if fullContacts.isEmpty {
@@ -189,34 +189,128 @@ struct CommandHandlers {
                 print("Total: \(dubiousAnalyses.count) dubious contact(s)")
             }
         } else {
-            let contacts = try manager.listAllContacts(filterMode: filter, dubiousMinScore: dubiousScore)
+            let fullContacts = try manager.listContactsWithAllFields()
+            var filteredContacts: [CNContact] = []
 
-            if contacts.isEmpty {
+            // Apply the same filtering logic as in ContactsManager.listAllContacts
+            for contact in fullContacts {
+                let emails = contact.emailAddresses.map { $0.value as String }
+                let phones = contact.phoneNumbers.map { $0.value.stringValue }
+
+                // Apply filter
+                switch filter {
+                case .withEmail:
+                    if emails.isEmpty { continue }
+                case .withoutEmail:
+                    if !emails.isEmpty { continue }
+                case .facebookOnly:
+                    let facebookEmails = emails.filter { $0.lowercased().hasSuffix("@facebook.com") }
+                    if facebookEmails.isEmpty { continue }
+                case .facebookExclusive:
+                    let facebookEmails = emails.filter { $0.lowercased().hasSuffix("@facebook.com") }
+                    let hasOnlyFacebookEmails = !facebookEmails.isEmpty && facebookEmails.count == emails.count
+                    let hasNoPhones = phones.isEmpty
+                    if !(hasOnlyFacebookEmails && hasNoPhones) { continue }
+                case .dubious:
+                    let analysis = manager.analyzeContact(contact)
+                    if !analysis.isDubious(minimumScore: dubiousScore) { continue }
+                case .all:
+                    break // Include all contacts
+                }
+
+                filteredContacts.append(contact)
+            }
+
+            if filteredContacts.isEmpty {
                 print(MessageUtilities.getEmptyMessage(for: filter))
             } else {
                 print(MessageUtilities.getHeaderMessage(for: filter) + "\n")
 
-                for contact in contacts {
-                    print("Name: \(contact.name)")
+                for contact in filteredContacts {
+                    let fullName = [contact.givenName, contact.familyName]
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " ")
+                    let displayName = fullName.isEmpty ? "No Name" : fullName
+                    
+                    print("Name: \(displayName)")
 
-                    if !contact.emails.isEmpty {
-                        for email in contact.emails {
+                    let emails = contact.emailAddresses.map { $0.value as String }
+                    if !emails.isEmpty {
+                        for email in emails {
                             print("  Email: \(email)")
                         }
                     }
 
-                    if !contact.phones.isEmpty {
-                        for phone in contact.phones {
+                    let phones = contact.phoneNumbers.map { $0.value.stringValue }
+                    if !phones.isEmpty {
+                        for phone in phones {
                             print("  Phone: \(phone)")
                         }
+                    }
+
+                    // Count hidden fields
+                    let hiddenFieldsCount = countHiddenFields(contact)
+                    if hiddenFieldsCount > 0 {
+                        print("  (+\(hiddenFieldsCount) more field\(hiddenFieldsCount == 1 ? "" : "s") - use --all-fields to see)")
                     }
 
                     print()
                 }
 
-                print("Total: \(contacts.count) contact(s)")
+                print("Total: \(filteredContacts.count) contact(s)")
             }
         }
+    }
+
+    // MARK: - Helper Functions
+
+    /// Count fields that are not shown in the normal display
+    static func countHiddenFields(_ contact: CNContact) -> Int {
+        var count = 0
+        
+        // Count name components beyond given/family name
+        if contact.isKeyAvailable(CNContactNamePrefixKey) && !contact.namePrefix.isEmpty { count += 1 }
+        if contact.isKeyAvailable(CNContactMiddleNameKey) && !contact.middleName.isEmpty { count += 1 }
+        if contact.isKeyAvailable(CNContactNameSuffixKey) && !contact.nameSuffix.isEmpty { count += 1 }
+        if contact.isKeyAvailable(CNContactNicknameKey) && !contact.nickname.isEmpty { count += 1 }
+        
+        // Count phonetic names
+        if contact.isKeyAvailable(CNContactPhoneticGivenNameKey) && !contact.phoneticGivenName.isEmpty { count += 1 }
+        if contact.isKeyAvailable(CNContactPhoneticMiddleNameKey) && !contact.phoneticMiddleName.isEmpty { count += 1 }
+        if contact.isKeyAvailable(CNContactPhoneticFamilyNameKey) && !contact.phoneticFamilyName.isEmpty { count += 1 }
+        
+        // Count organization fields
+        if contact.isKeyAvailable(CNContactOrganizationNameKey) && !contact.organizationName.isEmpty { count += 1 }
+        if contact.isKeyAvailable(CNContactDepartmentNameKey) && !contact.departmentName.isEmpty { count += 1 }
+        if contact.isKeyAvailable(CNContactJobTitleKey) && !contact.jobTitle.isEmpty { count += 1 }
+        
+        // Count other contact info
+        if contact.isKeyAvailable(CNContactPostalAddressesKey) && !contact.postalAddresses.isEmpty {
+            count += contact.postalAddresses.count
+        }
+        if contact.isKeyAvailable(CNContactUrlAddressesKey) && !contact.urlAddresses.isEmpty {
+            count += contact.urlAddresses.count
+        }
+        if contact.isKeyAvailable(CNContactSocialProfilesKey) && !contact.socialProfiles.isEmpty {
+            count += contact.socialProfiles.count
+        }
+        if contact.isKeyAvailable(CNContactInstantMessageAddressesKey) && !contact.instantMessageAddresses.isEmpty {
+            count += contact.instantMessageAddresses.count
+        }
+        
+        // Count dates
+        if contact.isKeyAvailable(CNContactBirthdayKey) && contact.birthday != nil { count += 1 }
+        if contact.isKeyAvailable(CNContactDatesKey) && !contact.dates.isEmpty {
+            count += contact.dates.count
+        }
+        
+        // Count notes
+        if contact.isKeyAvailable(CNContactNoteKey) && !contact.note.isEmpty { count += 1 }
+        
+        // Count image
+        if contact.isKeyAvailable(CNContactImageDataAvailableKey) && contact.imageDataAvailable { count += 1 }
+        
+        return count
     }
 
     // MARK: - Duplicate Detection and Merging Handlers

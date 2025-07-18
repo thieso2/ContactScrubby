@@ -17,7 +17,7 @@ struct ContactScrubby: AsyncParsableCommand {
     var dubiousScore: Int = 3
 
     @Flag(name: .long, help: "Show all available contact fields")
-    var dump: Bool = false
+    var allFields: Bool = false
 
     @Option(name: .long, help: "Export contacts to file (JSON or XML)")
     var backup: String?
@@ -39,7 +39,7 @@ struct ContactScrubby: AsyncParsableCommand {
 
     func run() async throws {
         // Check if no arguments were provided (all options are at their default values)
-        if filter == .all && dubiousScore == 3 && !dump && backup == nil && 
+        if filter == .all && dubiousScore == 3 && !allFields && backup == nil && 
            includeImages == .none && addToGroup == nil && !findDuplicates && !mergeDuplicates &&
            mergeStrategy == "conservative" {
             // Check if we're being called with no arguments at all
@@ -101,9 +101,9 @@ struct ContactScrubby: AsyncParsableCommand {
             return
         }
 
-        // Handle dump all fields
-        if dump {
-            try await CommandHandlers.handleDumpOperation(manager: manager)
+        // Handle all fields display
+        if allFields {
+            try await CommandHandlers.handleAllFieldsOperation(manager: manager)
             return
         }
 

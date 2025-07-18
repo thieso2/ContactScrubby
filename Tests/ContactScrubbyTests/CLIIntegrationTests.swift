@@ -39,7 +39,7 @@ final class CLIIntegrationTests: XCTestCase {
 
         XCTAssertEqual(command.filter, .all)
         XCTAssertEqual(command.dubiousScore, 3)
-        XCTAssertFalse(command.dump)
+        XCTAssertFalse(command.allFields)
         XCTAssertNil(command.backup)
         XCTAssertEqual(command.includeImages, .none)
         XCTAssertNil(command.addToGroup)
@@ -73,12 +73,12 @@ final class CLIIntegrationTests: XCTestCase {
         XCTAssertEqual(command2.dubiousScore, 10)
     }
 
-    func testDumpFlag() throws {
+    func testAllFieldsFlag() throws {
         let command1 = try ContactScrubby.parse([])
-        XCTAssertFalse(command1.dump)
+        XCTAssertFalse(command1.allFields)
 
-        let command2 = try ContactScrubby.parse(["--dump"])
-        XCTAssertTrue(command2.dump)
+        let command2 = try ContactScrubby.parse(["--all-fields"])
+        XCTAssertTrue(command2.allFields)
     }
 
     func testBackupArgument() throws {
@@ -176,7 +176,7 @@ final class CLIIntegrationTests: XCTestCase {
         let command = try! ContactScrubby.parse([])
         XCTAssertEqual(command.filter, .all)
         XCTAssertEqual(command.dubiousScore, 3)
-        XCTAssertFalse(command.dump)
+        XCTAssertFalse(command.allFields)
         XCTAssertNil(command.backup)
         XCTAssertEqual(command.includeImages, .none)
         XCTAssertNil(command.addToGroup)
