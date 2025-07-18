@@ -13,7 +13,7 @@ struct ContactsCLI {
         var backupFilename: String?
         var dubiousMinScore = 3
         var addToGroup: String?
-        var includeImages = false
+        var imageMode: ImageMode = .none
         
         // Parse arguments
         var argIndex = 1
@@ -27,6 +27,21 @@ struct ContactsCLI {
                     exit(1)
                 }
                 addToGroup = groupName
+                argIndex += 1
+                continue
+            }
+            
+            if arg.hasPrefix("--include-images=") {
+                let modeString = String(arg.dropFirst("--include-images=".count))
+                switch modeString.lowercased() {
+                case "inline":
+                    imageMode = .inline
+                case "folder":
+                    imageMode = .folder
+                default:
+                    print("Error: --include-images mode must be 'inline' or 'folder', got '\(modeString)'")
+                    exit(1)
+                }
                 argIndex += 1
                 continue
             }
@@ -55,7 +70,7 @@ struct ContactsCLI {
             case "--dump":
                 dumpAllFields = true
             case "--include-images":
-                includeImages = true
+                imageMode = .inline
             case "--backup":
                 backupMode = true
                 if argIndex + 1 < args.count && !args[argIndex + 1].hasPrefix("--") {
@@ -145,7 +160,7 @@ struct ContactsCLI {
             }
             
             if backupMode, let filename = backupFilename {
-                let contacts = try manager.getContactsForExport(filterMode: filterMode, dubiousMinScore: dubiousMinScore, includeImages: includeImages)
+                let contacts = try manager.getContactsForExport(filterMode: filterMode, dubiousMinScore: dubiousMinScore, imageMode: imageMode)
                 
                 if contacts.isEmpty {
                     print(getEmptyMessage(for: filterMode))
@@ -157,11 +172,29 @@ struct ContactsCLI {
                 
                 switch fileExtension {
                 case "json":
-                    try exportAsJSON(contacts: contacts, to: fileURL)
-                    print("Successfully exported \(contacts.count) contact(s) to \(filename)")
+                    if imageMode == .folder {
+                        let (exportedContacts, imageFolder) = try exportWithFolderImages(contacts: contacts, baseFilename: filename)
+                        try exportAsJSON(contacts: exportedContacts, to: fileURL)
+                        print("Successfully exported \(contacts.count) contact(s) to \(filename)")
+                        if let folder = imageFolder {
+                            print("Images saved to folder: \(folder)")
+                        }
+                    } else {
+                        try exportAsJSON(contacts: contacts, to: fileURL)
+                        print("Successfully exported \(contacts.count) contact(s) to \(filename)")
+                    }
                 case "xml":
-                    try exportAsXML(contacts: contacts, to: fileURL)
-                    print("Successfully exported \(contacts.count) contact(s) to \(filename)")
+                    if imageMode == .folder {
+                        let (exportedContacts, imageFolder) = try exportWithFolderImages(contacts: contacts, baseFilename: filename)
+                        try exportAsXML(contacts: exportedContacts, to: fileURL)
+                        print("Successfully exported \(contacts.count) contact(s) to \(filename)")
+                        if let folder = imageFolder {
+                            print("Images saved to folder: \(folder)")
+                        }
+                    } else {
+                        try exportAsXML(contacts: contacts, to: fileURL)
+                        print("Successfully exported \(contacts.count) contact(s) to \(filename)")
+                    }
                 default:
                     print("Error: Unsupported file format. Please use .json or .xml extension")
                     exit(1)
@@ -284,7 +317,8 @@ struct ContactsCLI {
           --dump               Dump all available contact fields
           --backup <filename>  Export contacts to JSON or XML file
                               Can be followed by filter options (e.g., --backup file.json --facebook)
-          --include-images     Include contact images in export (use with --backup)
+          --include-images[=mode] Include contact images in export (use with --backup)
+                              Modes: inline (default), folder
           --add_to_group="name" Add filtered contacts to specified group (creates group if needed)
           --help, -h           Show this help message
           
@@ -301,7 +335,8 @@ struct ContactsCLI {
           ContactsCLI --add_to_group="Facebook Contacts" --facebook
           ContactsCLI --add_to_group="No Phone Numbers" --no-email
           ContactsCLI --backup contacts-with-images.json --include-images
-          ContactsCLI --backup facebook-with-images.xml --facebook --include-images
+          ContactsCLI --backup facebook-with-images.xml --facebook --include-images=inline
+          ContactsCLI --backup contacts.json --include-images=folder --dubious
         """)
     }
     
@@ -489,6 +524,98 @@ struct ContactsCLI {
         if contact.isKeyAvailable(CNContactNoteKey) && !contact.note.isEmpty {
             print("Notes: \(contact.note)")
         }
+    }
+    
+    static func exportWithFolderImages(contacts: [SerializableContact], baseFilename: String) throws -> ([SerializableContact], String?) {
+        // Create folder name by adding "-images" to the base filename (without extension)
+        let baseURL = URL(fileURLWithPath: baseFilename)
+        let baseName = baseURL.deletingPathExtension().lastPathComponent
+        let folderName = "\(baseName)-images"
+        let folderURL = baseURL.deletingLastPathComponent().appendingPathComponent(folderName)
+        
+        var hasAnyImages = false
+        var modifiedContacts: [SerializableContact] = []
+        
+        // Check if any contacts have images
+        for contact in contacts {
+            if contact.hasImage && (contact.imageData != nil || contact.thumbnailImageData != nil) {
+                hasAnyImages = true
+                break
+            }
+        }
+        
+        // Only create folder if there are images to save
+        if hasAnyImages {
+            try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true, attributes: nil)
+        }
+        
+        // Process each contact
+        for contact in contacts {
+            var modifiedContact = contact
+            
+            if contact.hasImage {
+                var imageFilename: String? = nil
+                var thumbnailFilename: String? = nil
+                
+                // Save full-size image if available
+                if let imageDataString = contact.imageData,
+                   let imageData = Data(base64Encoded: imageDataString) {
+                    let safeName = sanitizeFilename(contact.name)
+                    imageFilename = "\(safeName)-image.jpg"
+                    let imageFileURL = folderURL.appendingPathComponent(imageFilename!)
+                    try imageData.write(to: imageFileURL)
+                }
+                
+                // Save thumbnail image if available
+                if let thumbnailDataString = contact.thumbnailImageData,
+                   let thumbnailData = Data(base64Encoded: thumbnailDataString) {
+                    let safeName = sanitizeFilename(contact.name)
+                    thumbnailFilename = "\(safeName)-thumbnail.jpg"
+                    let thumbnailFileURL = folderURL.appendingPathComponent(thumbnailFilename!)
+                    try thumbnailData.write(to: thumbnailFileURL)
+                }
+                
+                // Create modified contact with file references instead of base64 data
+                modifiedContact = SerializableContact(
+                    name: contact.name,
+                    namePrefix: contact.namePrefix,
+                    givenName: contact.givenName,
+                    middleName: contact.middleName,
+                    familyName: contact.familyName,
+                    nameSuffix: contact.nameSuffix,
+                    nickname: contact.nickname,
+                    phoneticGivenName: contact.phoneticGivenName,
+                    phoneticMiddleName: contact.phoneticMiddleName,
+                    phoneticFamilyName: contact.phoneticFamilyName,
+                    organizationName: contact.organizationName,
+                    departmentName: contact.departmentName,
+                    jobTitle: contact.jobTitle,
+                    emails: contact.emails,
+                    phones: contact.phones,
+                    postalAddresses: contact.postalAddresses,
+                    urls: contact.urls,
+                    socialProfiles: contact.socialProfiles,
+                    instantMessageAddresses: contact.instantMessageAddresses,
+                    birthday: contact.birthday,
+                    dates: contact.dates,
+                    contactType: contact.contactType,
+                    hasImage: contact.hasImage,
+                    imageData: imageFilename != nil ? "\(folderName)/\(imageFilename!)" : nil,
+                    thumbnailImageData: thumbnailFilename != nil ? "\(folderName)/\(thumbnailFilename!)" : nil,
+                    note: contact.note
+                )
+            }
+            
+            modifiedContacts.append(modifiedContact)
+        }
+        
+        return (modifiedContacts, hasAnyImages ? folderName : nil)
+    }
+    
+    static func sanitizeFilename(_ name: String) -> String {
+        // Replace invalid filename characters with underscores
+        let invalidChars = CharacterSet(charactersIn: "/\\:*?\"<>|")
+        return name.components(separatedBy: invalidChars).joined(separator: "_")
     }
     
     static func exportAsJSON(contacts: [SerializableContact], to url: URL) throws {

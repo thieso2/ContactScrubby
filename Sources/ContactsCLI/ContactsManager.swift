@@ -1,6 +1,12 @@
 import Foundation
 import Contacts
 
+enum ImageMode {
+    case none
+    case inline
+    case folder
+}
+
 struct SerializableContact: Codable {
     let name: String
     let namePrefix: String?
@@ -356,7 +362,7 @@ class ContactsManager {
         return dubiousAnalyses.sorted { $0.dubiousScore > $1.dubiousScore }
     }
     
-    func getContactsForExport(filterMode: FilterMode = .all, dubiousMinScore: Int = 3, includeImages: Bool = false) throws -> [SerializableContact] {
+    func getContactsForExport(filterMode: FilterMode = .all, dubiousMinScore: Int = 3, imageMode: ImageMode = .none) throws -> [SerializableContact] {
         let contacts = try listContactsWithAllFields()
         var serializableContacts: [SerializableContact] = []
         
@@ -385,6 +391,7 @@ class ContactsManager {
                 break
             }
             
+            let includeImages = imageMode == .inline || imageMode == .folder
             let serializable = convertToSerializable(contact, includeImages: includeImages)
             serializableContacts.append(serializable)
         }
