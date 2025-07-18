@@ -218,4 +218,127 @@ struct CommandHandlers {
             }
         }
     }
+
+    // MARK: - Duplicate Detection and Merging Handlers
+
+    static func handleFindDuplicatesOperation(
+        manager: ContactsManager,
+        strategy: MergeStrategy
+    ) async throws {
+        print("Finding duplicate contacts...")
+        
+        let allContacts = try manager.listContactsWithAllFields()
+        
+        if allContacts.isEmpty {
+            print("No contacts found.")
+            return
+        }
+        
+        let duplicateGroups = DuplicateManager.findDuplicates(in: allContacts, strategy: strategy)
+        
+        if duplicateGroups.isEmpty {
+            print("No duplicate contacts found.")
+            return
+        }
+        
+        print("Found \(duplicateGroups.count) group(s) of duplicate contacts:\n")
+        
+        for (index, group) in duplicateGroups.enumerated() {
+            print("== Duplicate Group \(index + 1) ==")
+            print("Confidence: \(String(format: "%.1f", group.confidence * 100))%")
+            print("Primary Contact: \(DuplicateManager.getFullName(group.primaryContact))")
+            print("Duplicates: \(group.duplicates.count)")
+            
+            for duplicate in group.duplicates {
+                print("  - \(DuplicateManager.getFullName(duplicate))")
+            }
+            
+            print()
+            
+            // Show detailed information for each contact in the group
+            for contact in group.contacts {
+                let fullName = DuplicateManager.getFullName(contact)
+                print("--- \(fullName.isEmpty ? "No Name" : fullName) ---")
+                
+                if !contact.emailAddresses.isEmpty {
+                    print("Emails: \(contact.emailAddresses.map { $0.value as String }.joined(separator: ", "))")
+                }
+                
+                if !contact.phoneNumbers.isEmpty {
+                    print("Phones: \(contact.phoneNumbers.map { $0.value.stringValue }.joined(separator: ", "))")
+                }
+                
+                if !contact.organizationName.isEmpty {
+                    print("Organization: \(contact.organizationName)")
+                }
+                
+                print()
+            }
+            
+            print(String(repeating: "=", count: 50))
+            print()
+        }
+        
+        print("Total duplicate contacts found: \(duplicateGroups.reduce(0) { $0 + $1.duplicates.count })")
+        print("Use --merge-duplicates to automatically merge them.")
+    }
+
+    static func handleMergeOperation(
+        manager: ContactsManager,
+        strategy: MergeStrategy
+    ) async throws {
+        print("Finding and merging duplicate contacts...")
+        
+        let allContacts = try manager.listContactsWithAllFields()
+        
+        if allContacts.isEmpty {
+            print("No contacts found.")
+            return
+        }
+        
+        let duplicateGroups = DuplicateManager.findDuplicates(in: allContacts, strategy: strategy)
+        
+        if duplicateGroups.isEmpty {
+            print("No duplicate contacts found.")
+            return
+        }
+        
+        print("Found \(duplicateGroups.count) group(s) of duplicate contacts.")
+        
+        var totalMerged = 0
+        var totalDeleted = 0
+        
+        for (index, group) in duplicateGroups.enumerated() {
+            print("\nProcessing group \(index + 1)/\(duplicateGroups.count)...")
+            
+            let result = DuplicateManager.mergeDuplicateGroup(group, strategy: strategy)
+            
+            if result.success {
+                // Create the merged contact
+                do {
+                    _ = try manager.createContact(from: result.mergedContact)
+                    
+                    // Delete the original contacts
+                    for originalContact in result.originalContacts {
+                        try manager.deleteContact(originalContact)
+                    }
+                    
+                    let primaryName = DuplicateManager.getFullName(group.primaryContact)
+                    print("✅ Merged \(group.duplicates.count) duplicate(s) into: \(primaryName)")
+                    
+                    totalMerged += 1
+                    totalDeleted += group.duplicates.count
+                } catch {
+                    print("❌ Failed to merge group: \(error.localizedDescription)")
+                }
+            } else {
+                print("❌ Failed to merge group: \(result.error ?? "Unknown error")")
+            }
+        }
+        
+        print("\n🎉 Merge operation completed!")
+        print("Groups merged: \(totalMerged)")
+        print("Duplicate contacts removed: \(totalDeleted)")
+        print("Total contacts saved: \(duplicateGroups.reduce(0) { $0 + $1.duplicates.count })")
+    }
 }

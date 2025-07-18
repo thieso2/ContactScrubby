@@ -600,4 +600,25 @@ class ContactsManager {
             note: contact.isKeyAvailable(CNContactNoteKey) && !contact.note.isEmpty ? contact.note : nil
         )
     }
+
+    // MARK: - Duplicate Management Methods
+
+    /// Create a new contact from a CNContact
+    func createContact(from contact: CNContact) throws -> CNContact {
+        let saveRequest = CNSaveRequest()
+        let mutableContact = contact.mutableCopy() as! CNMutableContact
+        saveRequest.add(mutableContact, toContainerWithIdentifier: nil)
+        
+        try store.execute(saveRequest)
+        return mutableContact
+    }
+
+    /// Delete a contact
+    func deleteContact(_ contact: CNContact) throws {
+        let saveRequest = CNSaveRequest()
+        let mutableContact = contact.mutableCopy() as! CNMutableContact
+        saveRequest.delete(mutableContact)
+        
+        try store.execute(saveRequest)
+    }
 }

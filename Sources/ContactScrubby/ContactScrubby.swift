@@ -28,10 +28,20 @@ struct ContactScrubby: AsyncParsableCommand {
     @Option(name: .long, help: "Add filtered contacts to specified group")
     var addToGroup: String?
 
+    @Flag(name: .long, help: "Find and display duplicate contacts")
+    var findDuplicates: Bool = false
+
+    @Flag(name: .long, help: "Merge duplicate contacts automatically")
+    var mergeDuplicates: Bool = false
+
+    @Option(name: .long, help: "Merge strategy: conservative, mostComplete, interactive")
+    var mergeStrategy: String = "conservative"
+
     func run() async throws {
         // Check if no arguments were provided (all options are at their default values)
         if filter == .withEmail && dubiousScore == 3 && !dump && backup == nil && 
-           includeImages == .none && addToGroup == nil {
+           includeImages == .none && addToGroup == nil && !findDuplicates && !mergeDuplicates &&
+           mergeStrategy == "conservative" {
             // Check if we're being called with no arguments at all
             if CommandLine.arguments.count == 1 {
                 print(ContactScrubby.helpMessage())
@@ -46,6 +56,26 @@ struct ContactScrubby: AsyncParsableCommand {
         if !granted {
             print("Access to contacts was denied. Please grant permission in System Preferences.")
             throw ExitCode.failure
+        }
+
+        // Handle merge duplicates if requested
+        if mergeDuplicates {
+            let strategy = parseMergeStrategy(mergeStrategy)
+            try await CommandHandlers.handleMergeOperation(
+                manager: manager,
+                strategy: strategy
+            )
+            return
+        }
+
+        // Handle find duplicates if requested
+        if findDuplicates {
+            let strategy = parseMergeStrategy(mergeStrategy)
+            try await CommandHandlers.handleFindDuplicatesOperation(
+                manager: manager,
+                strategy: strategy
+            )
+            return
         }
 
         // Handle group addition if requested
@@ -83,6 +113,21 @@ struct ContactScrubby: AsyncParsableCommand {
             filter: filter,
             dubiousScore: dubiousScore
         )
+    }
+
+    // MARK: - Helper Methods
+
+    private func parseMergeStrategy(_ strategy: String) -> MergeStrategy {
+        switch strategy.lowercased() {
+        case "conservative":
+            return .conservative
+        case "mostcomplete", "most-complete":
+            return .mostComplete
+        case "interactive":
+            return .interactive
+        default:
+            return .conservative
+        }
     }
 
     // MARK: - Static utility methods for tests and backwards compatibility
