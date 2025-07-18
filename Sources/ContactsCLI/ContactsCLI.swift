@@ -13,6 +13,7 @@ struct ContactsCLI {
         var backupFilename: String?
         var dubiousMinScore = 3
         var addToGroup: String?
+        var includeImages = false
         
         // Parse arguments
         var argIndex = 1
@@ -53,6 +54,8 @@ struct ContactsCLI {
                 filterMode = .all
             case "--dump":
                 dumpAllFields = true
+            case "--include-images":
+                includeImages = true
             case "--backup":
                 backupMode = true
                 if argIndex + 1 < args.count && !args[argIndex + 1].hasPrefix("--") {
@@ -142,7 +145,7 @@ struct ContactsCLI {
             }
             
             if backupMode, let filename = backupFilename {
-                let contacts = try manager.getContactsForExport(filterMode: filterMode, dubiousMinScore: dubiousMinScore)
+                let contacts = try manager.getContactsForExport(filterMode: filterMode, dubiousMinScore: dubiousMinScore, includeImages: includeImages)
                 
                 if contacts.isEmpty {
                     print(getEmptyMessage(for: filterMode))
@@ -281,6 +284,7 @@ struct ContactsCLI {
           --dump               Dump all available contact fields
           --backup <filename>  Export contacts to JSON or XML file
                               Can be followed by filter options (e.g., --backup file.json --facebook)
+          --include-images     Include contact images in export (use with --backup)
           --add_to_group="name" Add filtered contacts to specified group (creates group if needed)
           --help, -h           Show this help message
           
@@ -296,6 +300,8 @@ struct ContactsCLI {
           ContactsCLI --add_to_group="Cleanup Needed" --dubious
           ContactsCLI --add_to_group="Facebook Contacts" --facebook
           ContactsCLI --add_to_group="No Phone Numbers" --no-email
+          ContactsCLI --backup contacts-with-images.json --include-images
+          ContactsCLI --backup facebook-with-images.xml --facebook --include-images
         """)
     }
     
@@ -604,6 +610,14 @@ struct ContactsCLI {
             
             xml += "    <contactType>\(escapeXML(contact.contactType))</contactType>\n"
             xml += "    <hasImage>\(contact.hasImage)</hasImage>\n"
+            
+            if let imageData = contact.imageData {
+                xml += "    <imageData>\(imageData)</imageData>\n"
+            }
+            
+            if let thumbnailImageData = contact.thumbnailImageData {
+                xml += "    <thumbnailImageData>\(thumbnailImageData)</thumbnailImageData>\n"
+            }
             
             if let note = contact.note {
                 xml += "    <note>\(escapeXML(note))</note>\n"

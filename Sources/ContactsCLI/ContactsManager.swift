@@ -25,6 +25,8 @@ struct SerializableContact: Codable {
     let dates: [LabeledDate]
     let contactType: String
     let hasImage: Bool
+    let imageData: String? // Base64 encoded image data
+    let thumbnailImageData: String? // Base64 encoded thumbnail image data
     let note: String?
     
     struct LabeledValue: Codable {
@@ -354,7 +356,7 @@ class ContactsManager {
         return dubiousAnalyses.sorted { $0.dubiousScore > $1.dubiousScore }
     }
     
-    func getContactsForExport(filterMode: FilterMode = .all, dubiousMinScore: Int = 3) throws -> [SerializableContact] {
+    func getContactsForExport(filterMode: FilterMode = .all, dubiousMinScore: Int = 3, includeImages: Bool = false) throws -> [SerializableContact] {
         let contacts = try listContactsWithAllFields()
         var serializableContacts: [SerializableContact] = []
         
@@ -383,7 +385,7 @@ class ContactsManager {
                 break
             }
             
-            let serializable = convertToSerializable(contact)
+            let serializable = convertToSerializable(contact, includeImages: includeImages)
             serializableContacts.append(serializable)
         }
         
@@ -470,7 +472,7 @@ class ContactsManager {
         return (added: addedCount, skipped: skippedCount, errors: errors)
     }
     
-    private func convertToSerializable(_ contact: CNContact) -> SerializableContact {
+    private func convertToSerializable(_ contact: CNContact, includeImages: Bool = false) -> SerializableContact {
         let fullName = [contact.namePrefix, contact.givenName, contact.middleName, contact.familyName, contact.nameSuffix]
             .filter { !$0.isEmpty }
             .joined(separator: " ")
@@ -565,6 +567,8 @@ class ContactsManager {
             dates: dates,
             contactType: contact.contactType == .organization ? "Organization" : "Person",
             hasImage: contact.imageDataAvailable,
+            imageData: includeImages && contact.isKeyAvailable(CNContactImageDataKey) && contact.imageData != nil ? contact.imageData?.base64EncodedString() : nil,
+            thumbnailImageData: includeImages && contact.isKeyAvailable(CNContactThumbnailImageDataKey) && contact.thumbnailImageData != nil ? contact.thumbnailImageData?.base64EncodedString() : nil,
             note: contact.isKeyAvailable(CNContactNoteKey) && !contact.note.isEmpty ? contact.note : nil
         )
     }
