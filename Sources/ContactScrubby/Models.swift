@@ -8,7 +8,7 @@ enum FilterMode: String, ExpressibleByArgument, CaseIterable {
     case facebookExclusive = "facebook-exclusive"
     case dubious = "dubious"
     case all = "all"
-    
+
     var help: String {
         switch self {
         case .withEmail:
@@ -28,10 +28,10 @@ enum FilterMode: String, ExpressibleByArgument, CaseIterable {
 }
 
 enum ImageMode: String, ExpressibleByArgument, CaseIterable {
-    case none = "none"
-    case inline = "inline"
-    case folder = "folder"
-    
+    case none
+    case inline
+    case folder
+
     var help: String {
         switch self {
         case .none:
@@ -49,15 +49,15 @@ struct ExportOptions {
     let imageMode: ImageMode
     let filterMode: FilterMode
     let dubiousMinScore: Int
-    
+
     var fileURL: URL {
         URL(fileURLWithPath: filename)
     }
-    
+
     var fileExtension: String {
         fileURL.pathExtension.lowercased()
     }
-    
+
     var isValidFormat: Bool {
         ["json", "xml"].contains(fileExtension)
     }

@@ -1,9 +1,9 @@
 import Foundation
 
 struct MessageUtilities {
-    
+
     // MARK: - User Messages
-    
+
     static func getEmptyMessage(for mode: FilterMode) -> String {
         switch mode {
         case .withEmail:
@@ -20,7 +20,7 @@ struct MessageUtilities {
             return "No contacts found."
         }
     }
-    
+
     static func getHeaderMessage(for mode: FilterMode) -> String {
         switch mode {
         case .withEmail:

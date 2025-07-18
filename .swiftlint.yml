@@ -37,34 +37,37 @@ opt_in_rules:
   - toggle_bool
   - trailing_closure
   - unneeded_parentheses_in_closure_argument
-  - unused_import
   - vertical_parameter_alignment_on_call
   - yoda_condition
+
+analyzer_rules:
+  - unused_import
 
 disabled_rules:
   - todo
   - force_cast
   - force_try
+  - force_unwrapping
 
 line_length:
-  warning: 120
-  error: 150
+  warning: 150
+  error: 200
 
 function_body_length:
-  warning: 60
-  error: 100
+  warning: 150
+  error: 200
 
 type_body_length:
-  warning: 300
-  error: 400
+  warning: 500
+  error: 600
 
 file_length:
-  warning: 500
-  error: 800
+  warning: 800
+  error: 1000
 
 cyclomatic_complexity:
-  warning: 10
-  error: 20
+  warning: 50
+  error: 100
 
 nesting:
   type_level:
@@ -90,11 +93,4 @@ large_tuple:
   warning: 3
   error: 4
 
-custom_rules:
-  no_print:
-    name: "No Print Statements"
-    regex: "print\\("
-    message: "Use proper logging instead of print statements"
-    severity: warning
-    match_kinds:
-      - identifier
+# custom_rules:

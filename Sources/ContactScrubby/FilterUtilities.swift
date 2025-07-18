@@ -2,13 +2,13 @@ import Foundation
 import Contacts
 
 struct FilterUtilities {
-    
+
     // MARK: - Contact Filtering Logic
-    
+
     static func shouldIncludeContact(_ contact: CNContact, filter: FilterMode) -> Bool {
         let emails = contact.emailAddresses.map { $0.value as String }
         let phones = contact.phoneNumbers.map { $0.value.stringValue }
-        
+
         switch filter {
         case .withEmail:
             return !emails.isEmpty

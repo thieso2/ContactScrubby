@@ -2,41 +2,40 @@ import Foundation
 import Contacts
 
 struct ExportUtilities {
-    
+
     // MARK: - Image Export with Folder
-    
-    static func exportWithFolderImages(rawContacts: [CNContact], baseFilename: String) throws -> ([SerializableContact], String?) {
+
+    static func exportWithFolderImages(rawContacts: [CNContact], baseFilename: String) throws
+        -> ([SerializableContact], String?) {
         // Create folder name by adding "-images" to the base filename (without extension)
         let baseURL = URL(fileURLWithPath: baseFilename)
         let baseName = baseURL.deletingPathExtension().lastPathComponent
         let folderName = "\(baseName)-images"
         let folderURL = baseURL.deletingLastPathComponent().appendingPathComponent(folderName)
-        
+
         var hasAnyImages = false
         var modifiedContacts: [SerializableContact] = []
-        
+
         // Check if any contacts have images
-        for contact in rawContacts {
-            if contact.imageDataAvailable {
-                hasAnyImages = true
-                break
-            }
+        for contact in rawContacts where contact.imageDataAvailable {
+            hasAnyImages = true
+            break
         }
-        
+
         // Only create folder if there are images to save
         if hasAnyImages {
             try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true, attributes: nil)
         }
-        
+
         // Process each contact
         for contact in rawContacts {
             let manager = ContactsManager()
             var serializableContact = manager.convertToSerializable(contact, includeImages: false)
-            
+
             if contact.imageDataAvailable {
-                var imageFilename: String? = nil
-                var thumbnailFilename: String? = nil
-                
+                var imageFilename: String?
+                var thumbnailFilename: String?
+
                 // Save full-size image if available
                 if let imageData = contact.imageData {
                     let fullName = [contact.givenName, contact.familyName].filter { !$0.isEmpty }.joined(separator: " ")
@@ -46,7 +45,7 @@ struct ExportUtilities {
                     let imageFileURL = folderURL.appendingPathComponent(imageFilename!)
                     try imageData.write(to: imageFileURL)
                 }
-                
+
                 // Save thumbnail image if available
                 if let thumbnailData = contact.thumbnailImageData {
                     let fullName = [contact.givenName, contact.familyName].filter { !$0.isEmpty }.joined(separator: " ")
@@ -56,7 +55,7 @@ struct ExportUtilities {
                     let thumbnailFileURL = folderURL.appendingPathComponent(thumbnailFilename!)
                     try thumbnailData.write(to: thumbnailFileURL)
                 }
-                
+
                 // Update the serializable contact with file references instead of base64 data
                 serializableContact = SerializableContact(
                     name: serializableContact.name,
@@ -87,55 +86,65 @@ struct ExportUtilities {
                     note: serializableContact.note
                 )
             }
-            
+
             modifiedContacts.append(serializableContact)
         }
-        
+
         return (modifiedContacts, hasAnyImages ? folderName : nil)
     }
-    
+
     // MARK: - Filename Sanitization
-    
+
     static func sanitizeFilename(_ name: String) -> String {
         // Replace invalid filename characters with underscores
         let invalidChars = CharacterSet(charactersIn: "/\\:*?\"<>|")
         return name.components(separatedBy: invalidChars).joined(separator: "_")
     }
-    
+
     // MARK: - JSON Export
-    
+
     static func exportAsJSON(contacts: [SerializableContact], to url: URL) throws {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
-        
+
         let data = try encoder.encode(contacts)
         try data.write(to: url)
     }
-    
+
     // MARK: - XML Export
-    
+
     static func exportAsXML(contacts: [SerializableContact], to url: URL) throws {
         var xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"
         xml += "<contacts>\n"
-        
+
         for contact in contacts {
             xml += "  <contact>\n"
             xml += "    <name>\(escapeXML(contact.name))</name>\n"
-            
+
             if let value = contact.namePrefix { xml += "    <namePrefix>\(escapeXML(value))</namePrefix>\n" }
             if let value = contact.givenName { xml += "    <givenName>\(escapeXML(value))</givenName>\n" }
             if let value = contact.middleName { xml += "    <middleName>\(escapeXML(value))</middleName>\n" }
             if let value = contact.familyName { xml += "    <familyName>\(escapeXML(value))</familyName>\n" }
             if let value = contact.nameSuffix { xml += "    <nameSuffix>\(escapeXML(value))</nameSuffix>\n" }
             if let value = contact.nickname { xml += "    <nickname>\(escapeXML(value))</nickname>\n" }
-            if let value = contact.phoneticGivenName { xml += "    <phoneticGivenName>\(escapeXML(value))</phoneticGivenName>\n" }
-            if let value = contact.phoneticMiddleName { xml += "    <phoneticMiddleName>\(escapeXML(value))</phoneticMiddleName>\n" }
-            if let value = contact.phoneticFamilyName { xml += "    <phoneticFamilyName>\(escapeXML(value))</phoneticFamilyName>\n" }
-            if let value = contact.organizationName { xml += "    <organizationName>\(escapeXML(value))</organizationName>\n" }
-            if let value = contact.departmentName { xml += "    <departmentName>\(escapeXML(value))</departmentName>\n" }
+            if let value = contact.phoneticGivenName {
+                xml += "    <phoneticGivenName>\(escapeXML(value))</phoneticGivenName>\n"
+            }
+            if let value = contact.phoneticMiddleName {
+                xml += "    <phoneticMiddleName>\(escapeXML(value))</phoneticMiddleName>\n"
+            }
+            if let value = contact.phoneticFamilyName {
+                xml += "    <phoneticFamilyName>\(escapeXML(value))</phoneticFamilyName>\n"
+            }
+            if let value = contact.organizationName {
+                xml += "    <organizationName>\(escapeXML(value))</organizationName>\n"
+            }
+            if let value = contact.departmentName {
+                xml += "    <departmentName>\(escapeXML(value))</departmentName>\n"
+            }
             if let value = contact.jobTitle { xml += "    <jobTitle>\(escapeXML(value))</jobTitle>\n" }
-            
+
             if !contact.emails.isEmpty {
                 xml += "    <emails>\n"
                 for email in contact.emails {
@@ -145,7 +154,7 @@ struct ExportUtilities {
                 }
                 xml += "    </emails>\n"
             }
-            
+
             if !contact.phones.isEmpty {
                 xml += "    <phones>\n"
                 for phone in contact.phones {
@@ -155,7 +164,7 @@ struct ExportUtilities {
                 }
                 xml += "    </phones>\n"
             }
-            
+
             if !contact.postalAddresses.isEmpty {
                 xml += "    <postalAddresses>\n"
                 for address in contact.postalAddresses {
@@ -171,7 +180,7 @@ struct ExportUtilities {
                 }
                 xml += "    </postalAddresses>\n"
             }
-            
+
             if !contact.urls.isEmpty {
                 xml += "    <urls>\n"
                 for url in contact.urls {
@@ -181,7 +190,7 @@ struct ExportUtilities {
                 }
                 xml += "    </urls>\n"
             }
-            
+
             if !contact.socialProfiles.isEmpty {
                 xml += "    <socialProfiles>\n"
                 for profile in contact.socialProfiles {
@@ -191,7 +200,7 @@ struct ExportUtilities {
                 }
                 xml += "    </socialProfiles>\n"
             }
-            
+
             if !contact.instantMessageAddresses.isEmpty {
                 xml += "    <instantMessages>\n"
                 for im in contact.instantMessageAddresses {
@@ -201,7 +210,7 @@ struct ExportUtilities {
                 }
                 xml += "    </instantMessages>\n"
             }
-            
+
             if let birthday = contact.birthday {
                 xml += "    <birthday"
                 if let day = birthday.day { xml += " day=\"\(day)\"" }
@@ -209,7 +218,7 @@ struct ExportUtilities {
                 if let year = birthday.year { xml += " year=\"\(year)\"" }
                 xml += "/>\n"
             }
-            
+
             if !contact.dates.isEmpty {
                 xml += "    <importantDates>\n"
                 for date in contact.dates {
@@ -222,34 +231,34 @@ struct ExportUtilities {
                 }
                 xml += "    </importantDates>\n"
             }
-            
+
             xml += "    <contactType>\(escapeXML(contact.contactType))</contactType>\n"
             xml += "    <hasImage>\(contact.hasImage)</hasImage>\n"
-            
+
             if let imageData = contact.imageData {
                 xml += "    <imageData>\(imageData)</imageData>\n"
             }
-            
+
             if let thumbnailImageData = contact.thumbnailImageData {
                 xml += "    <thumbnailImageData>\(thumbnailImageData)</thumbnailImageData>\n"
             }
-            
+
             if let note = contact.note {
                 xml += "    <note>\(escapeXML(note))</note>\n"
             }
-            
+
             xml += "  </contact>\n"
         }
-        
+
         xml += "</contacts>\n"
-        
+
         try xml.write(to: url, atomically: true, encoding: .utf8)
     }
-    
+
     // MARK: - XML Escaping
-    
+
     static func escapeXML(_ string: String) -> String {
-        return string
+        string
             .replacingOccurrences(of: "&", with: "&amp;")
             .replacingOccurrences(of: "<", with: "&lt;")
             .replacingOccurrences(of: ">", with: "&gt;")

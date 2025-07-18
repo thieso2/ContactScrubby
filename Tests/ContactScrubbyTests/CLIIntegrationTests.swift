@@ -3,40 +3,40 @@ import ArgumentParser
 @testable import ContactScrubby
 
 final class CLIIntegrationTests: XCTestCase {
-    
+
     var tempDirectory: URL!
-    
+
     override func setUp() {
         super.setUp()
         // Create a temporary directory for test files
         tempDirectory = FileManager.default.temporaryDirectory
             .appendingPathComponent("ContactScrubbyTests")
             .appendingPathComponent(UUID().uuidString)
-        
+
         try? FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
     }
-    
+
     override func tearDown() {
         // Clean up temporary directory
         try? FileManager.default.removeItem(at: tempDirectory)
         super.tearDown()
     }
-    
+
     // MARK: - Command Configuration Tests
-    
+
     func testCommandConfiguration() {
         let config = ContactScrubby.configuration
-        
+
         XCTAssertEqual(config.commandName, "contactscrub")
         XCTAssertEqual(config.abstract, "A powerful contact scrubbing and management tool")
         XCTAssertEqual(config.version, "1.0.0")
     }
-    
+
     // MARK: - Argument Parsing Tests
-    
+
     func testDefaultArgumentParsing() throws {
         let command = try ContactScrubby.parse([])
-        
+
         XCTAssertEqual(command.filter, .withEmail)
         XCTAssertEqual(command.dubiousScore, 3)
         XCTAssertFalse(command.dump)
@@ -44,7 +44,7 @@ final class CLIIntegrationTests: XCTestCase {
         XCTAssertEqual(command.includeImages, .none)
         XCTAssertNil(command.addToGroup)
     }
-    
+
     func testFilterArguments() throws {
         let testCases: [(String, FilterMode)] = [
             ("--filter", .withEmail),
@@ -57,65 +57,65 @@ final class CLIIntegrationTests: XCTestCase {
             ("-f", .withEmail),
             ("-f=dubious", .dubious)
         ]
-        
+
         for (arg, expectedMode) in testCases {
             let args = arg.contains("=") ? [arg] : [arg, expectedMode.rawValue]
             let command = try ContactScrubby.parse(args)
             XCTAssertEqual(command.filter, expectedMode, "Failed for argument: \(arg)")
         }
     }
-    
+
     func testDubiousScoreArgument() throws {
         let command1 = try ContactScrubby.parse(["--dubious-score", "5"])
         XCTAssertEqual(command1.dubiousScore, 5)
-        
+
         let command2 = try ContactScrubby.parse(["--dubious-score=10"])
         XCTAssertEqual(command2.dubiousScore, 10)
     }
-    
+
     func testDumpFlag() throws {
         let command1 = try ContactScrubby.parse([])
         XCTAssertFalse(command1.dump)
-        
+
         let command2 = try ContactScrubby.parse(["--dump"])
         XCTAssertTrue(command2.dump)
     }
-    
+
     func testBackupArgument() throws {
         let command1 = try ContactScrubby.parse([])
         XCTAssertNil(command1.backup)
-        
+
         let command2 = try ContactScrubby.parse(["--backup", "test.json"])
         XCTAssertEqual(command2.backup, "test.json")
-        
+
         let command3 = try ContactScrubby.parse(["--backup=contacts.xml"])
         XCTAssertEqual(command3.backup, "contacts.xml")
     }
-    
+
     func testIncludeImagesArgument() throws {
         let testCases: [(String, ImageMode)] = [
             ("none", .none),
             ("inline", .inline),
             ("folder", .folder)
         ]
-        
+
         for (value, expectedMode) in testCases {
             let command = try ContactScrubby.parse(["--include-images", value])
             XCTAssertEqual(command.includeImages, expectedMode, "Failed for value: \(value)")
         }
     }
-    
+
     func testAddToGroupArgument() throws {
         let command1 = try ContactScrubby.parse([])
         XCTAssertNil(command1.addToGroup)
-        
+
         let command2 = try ContactScrubby.parse(["--add-to-group", "Test Group"])
         XCTAssertEqual(command2.addToGroup, "Test Group")
-        
+
         let command3 = try ContactScrubby.parse(["--add-to-group=Facebook Contacts"])
         XCTAssertEqual(command3.addToGroup, "Facebook Contacts")
     }
-    
+
     func testCombinedArguments() throws {
         let command = try ContactScrubby.parse([
             "--filter", "dubious",
@@ -123,38 +123,38 @@ final class CLIIntegrationTests: XCTestCase {
             "--backup", "suspicious.json",
             "--include-images", "inline"
         ])
-        
+
         XCTAssertEqual(command.filter, .dubious)
         XCTAssertEqual(command.dubiousScore, 2)
         XCTAssertEqual(command.backup, "suspicious.json")
         XCTAssertEqual(command.includeImages, .inline)
     }
-    
+
     // MARK: - Invalid Argument Tests
-    
+
     func testInvalidFilterMode() {
         XCTAssertThrowsError(try ContactScrubby.parse(["--filter", "invalid"])) { error in
             // ArgumentParser throws different error types for invalid values
             XCTAssertTrue(error is Error)
         }
     }
-    
+
     func testInvalidImageMode() {
         XCTAssertThrowsError(try ContactScrubby.parse(["--include-images", "invalid"])) { error in
             // ArgumentParser throws different error types for invalid values
             XCTAssertTrue(error is Error)
         }
     }
-    
+
     func testInvalidDubiousScore() {
         XCTAssertThrowsError(try ContactScrubby.parse(["--dubious-score", "invalid"])) { error in
             // ArgumentParser throws different error types for invalid values
             XCTAssertTrue(error is Error)
         }
     }
-    
+
     // MARK: - Help and Version Tests
-    
+
     func testHelpOutput() {
         // Test that help can be requested
         XCTAssertThrowsError(try ContactScrubby.parse(["--help"])) { error in
@@ -162,16 +162,16 @@ final class CLIIntegrationTests: XCTestCase {
             XCTAssertTrue(error is Error)
         }
     }
-    
+
     func testVersionOutput() {
         XCTAssertThrowsError(try ContactScrubby.parse(["--version"])) { error in
             // Version should throw some kind of error to exit
             XCTAssertTrue(error is Error)
         }
     }
-    
+
     // MARK: - File Operations Tests
-    
+
     func testExportAsJSON() throws {
         let testFile = tempDirectory.appendingPathComponent("test.json")
         let testContacts = [
@@ -204,16 +204,16 @@ final class CLIIntegrationTests: XCTestCase {
                 note: nil
             )
         ]
-        
+
         try ContactScrubby.exportAsJSON(contacts: testContacts, to: testFile)
-        
+
         XCTAssertTrue(FileManager.default.fileExists(atPath: testFile.path))
-        
+
         let data = try Data(contentsOf: testFile)
         let jsonObject = try JSONSerialization.jsonObject(with: data)
-        
+
         XCTAssertTrue(jsonObject is [Any])
-        
+
         if let contacts = jsonObject as? [[String: Any]] {
             XCTAssertEqual(contacts.count, 1)
             let contact = contacts[0]
@@ -222,13 +222,13 @@ final class CLIIntegrationTests: XCTestCase {
             XCTAssertEqual(contact["familyName"] as? String, "Doe")
             XCTAssertEqual(contact["contactType"] as? String, "Person")
             XCTAssertEqual(contact["hasImage"] as? Bool, false)
-            
+
             if let emails = contact["emails"] as? [[String: Any]] {
                 XCTAssertEqual(emails.count, 1)
                 XCTAssertEqual(emails[0]["label"] as? String, "work")
                 XCTAssertEqual(emails[0]["value"] as? String, "john@example.com")
             }
-            
+
             if let phones = contact["phones"] as? [[String: Any]] {
                 XCTAssertEqual(phones.count, 1)
                 XCTAssertEqual(phones[0]["label"] as? String, "mobile")
@@ -236,7 +236,7 @@ final class CLIIntegrationTests: XCTestCase {
             }
         }
     }
-    
+
     func testExportAsXML() throws {
         let testFile = tempDirectory.appendingPathComponent("test.xml")
         let testContacts = [
@@ -269,13 +269,13 @@ final class CLIIntegrationTests: XCTestCase {
                 note: "Test contact"
             )
         ]
-        
+
         try ContactScrubby.exportAsXML(contacts: testContacts, to: testFile)
-        
+
         XCTAssertTrue(FileManager.default.fileExists(atPath: testFile.path))
-        
+
         let content = try String(contentsOf: testFile, encoding: .utf8)
-        
+
         XCTAssertTrue(content.contains("<?xml version=\"1.0\" encoding=\"UTF-8\"?>"))
         XCTAssertTrue(content.contains("<contacts>"))
         XCTAssertTrue(content.contains("</contacts>"))
@@ -296,9 +296,9 @@ final class CLIIntegrationTests: XCTestCase {
         XCTAssertTrue(content.contains("month=\"6\""))
         XCTAssertTrue(content.contains("year=\"1990\""))
     }
-    
+
     // MARK: - Export Options Tests
-    
+
     func testExportOptionsValidation() {
         let validOptions = ExportOptions(
             filename: "test.json",
@@ -308,7 +308,7 @@ final class CLIIntegrationTests: XCTestCase {
         )
         XCTAssertTrue(validOptions.isValidFormat)
         XCTAssertEqual(validOptions.fileExtension, "json")
-        
+
         let invalidOptions = ExportOptions(
             filename: "test.txt",
             imageMode: .inline,
@@ -318,9 +318,9 @@ final class CLIIntegrationTests: XCTestCase {
         XCTAssertFalse(invalidOptions.isValidFormat)
         XCTAssertEqual(invalidOptions.fileExtension, "txt")
     }
-    
+
     // MARK: - Filename Sanitization Tests
-    
+
     func testSanitizeFilenameIntegration() {
         let testCases = [
             ("Normal Name", "Normal Name"),
@@ -329,15 +329,15 @@ final class CLIIntegrationTests: XCTestCase {
             ("Name\"With<Quotes>", "Name_With_Quotes_"),
             ("Name|With|Pipes", "Name_With_Pipes")
         ]
-        
+
         for (input, expected) in testCases {
             let result = ContactScrubby.sanitizeFilename(input)
             XCTAssertEqual(result, expected, "Failed for: \(input)")
         }
     }
-    
+
     // MARK: - Performance Tests
-    
+
     func testLargeContactListPerformance() throws {
         let contacts = (0..<1000).map { index in
             SerializableContact(
@@ -369,18 +369,18 @@ final class CLIIntegrationTests: XCTestCase {
                 note: nil
             )
         }
-        
+
         let testFile = tempDirectory.appendingPathComponent("large_test.json")
-        
+
         measure {
             try! ContactScrubby.exportAsJSON(contacts: contacts, to: testFile)
         }
-        
+
         XCTAssertTrue(FileManager.default.fileExists(atPath: testFile.path))
-        
+
         let data = try Data(contentsOf: testFile)
         let jsonObject = try JSONSerialization.jsonObject(with: data)
-        
+
         if let contactsArray = jsonObject as? [Any] {
             XCTAssertEqual(contactsArray.count, 1000)
         }
