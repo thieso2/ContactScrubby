@@ -248,10 +248,10 @@ struct CommandHandlers {
                         }
                     }
 
-                    // Count hidden fields
-                    let hiddenFieldsCount = countHiddenFields(contact)
-                    if hiddenFieldsCount > 0 {
-                        print("  (+\(hiddenFieldsCount) more field\(hiddenFieldsCount == 1 ? "" : "s") - use --all-fields to see)")
+                    // Show hidden field names
+                    let hiddenFieldNames = getHiddenFieldNames(contact)
+                    if !hiddenFieldNames.isEmpty {
+                        print("  (hidden: \(hiddenFieldNames.joined(separator: ", ")))")
                     }
 
                     print()
@@ -264,53 +264,73 @@ struct CommandHandlers {
 
     // MARK: - Helper Functions
 
-    /// Count fields that are not shown in the normal display
-    static func countHiddenFields(_ contact: CNContact) -> Int {
-        var count = 0
+    /// Get list of field names that are not shown in the normal display
+    static func getHiddenFieldNames(_ contact: CNContact) -> [String] {
+        var fieldNames: [String] = []
         
-        // Count name components beyond given/family name
-        if contact.isKeyAvailable(CNContactNamePrefixKey) && !contact.namePrefix.isEmpty { count += 1 }
-        if contact.isKeyAvailable(CNContactMiddleNameKey) && !contact.middleName.isEmpty { count += 1 }
-        if contact.isKeyAvailable(CNContactNameSuffixKey) && !contact.nameSuffix.isEmpty { count += 1 }
-        if contact.isKeyAvailable(CNContactNicknameKey) && !contact.nickname.isEmpty { count += 1 }
+        // Name components beyond given/family name
+        if contact.isKeyAvailable(CNContactNamePrefixKey) && !contact.namePrefix.isEmpty { fieldNames.append("prefix") }
+        if contact.isKeyAvailable(CNContactMiddleNameKey) && !contact.middleName.isEmpty { fieldNames.append("middle name") }
+        if contact.isKeyAvailable(CNContactNameSuffixKey) && !contact.nameSuffix.isEmpty { fieldNames.append("suffix") }
+        if contact.isKeyAvailable(CNContactNicknameKey) && !contact.nickname.isEmpty { fieldNames.append("nickname") }
         
-        // Count phonetic names
-        if contact.isKeyAvailable(CNContactPhoneticGivenNameKey) && !contact.phoneticGivenName.isEmpty { count += 1 }
-        if contact.isKeyAvailable(CNContactPhoneticMiddleNameKey) && !contact.phoneticMiddleName.isEmpty { count += 1 }
-        if contact.isKeyAvailable(CNContactPhoneticFamilyNameKey) && !contact.phoneticFamilyName.isEmpty { count += 1 }
+        // Phonetic names
+        if contact.isKeyAvailable(CNContactPhoneticGivenNameKey) && !contact.phoneticGivenName.isEmpty { fieldNames.append("phonetic given name") }
+        if contact.isKeyAvailable(CNContactPhoneticMiddleNameKey) && !contact.phoneticMiddleName.isEmpty { fieldNames.append("phonetic middle name") }
+        if contact.isKeyAvailable(CNContactPhoneticFamilyNameKey) && !contact.phoneticFamilyName.isEmpty { fieldNames.append("phonetic family name") }
         
-        // Count organization fields
-        if contact.isKeyAvailable(CNContactOrganizationNameKey) && !contact.organizationName.isEmpty { count += 1 }
-        if contact.isKeyAvailable(CNContactDepartmentNameKey) && !contact.departmentName.isEmpty { count += 1 }
-        if contact.isKeyAvailable(CNContactJobTitleKey) && !contact.jobTitle.isEmpty { count += 1 }
+        // Organization fields
+        if contact.isKeyAvailable(CNContactOrganizationNameKey) && !contact.organizationName.isEmpty { fieldNames.append("organization") }
+        if contact.isKeyAvailable(CNContactDepartmentNameKey) && !contact.departmentName.isEmpty { fieldNames.append("department") }
+        if contact.isKeyAvailable(CNContactJobTitleKey) && !contact.jobTitle.isEmpty { fieldNames.append("job title") }
         
-        // Count other contact info
+        // Other contact info
         if contact.isKeyAvailable(CNContactPostalAddressesKey) && !contact.postalAddresses.isEmpty {
-            count += contact.postalAddresses.count
+            if contact.postalAddresses.count == 1 {
+                fieldNames.append("address")
+            } else {
+                fieldNames.append("addresses")
+            }
         }
         if contact.isKeyAvailable(CNContactUrlAddressesKey) && !contact.urlAddresses.isEmpty {
-            count += contact.urlAddresses.count
+            if contact.urlAddresses.count == 1 {
+                fieldNames.append("URL")
+            } else {
+                fieldNames.append("URLs")
+            }
         }
         if contact.isKeyAvailable(CNContactSocialProfilesKey) && !contact.socialProfiles.isEmpty {
-            count += contact.socialProfiles.count
+            if contact.socialProfiles.count == 1 {
+                fieldNames.append("social profile")
+            } else {
+                fieldNames.append("social profiles")
+            }
         }
         if contact.isKeyAvailable(CNContactInstantMessageAddressesKey) && !contact.instantMessageAddresses.isEmpty {
-            count += contact.instantMessageAddresses.count
+            if contact.instantMessageAddresses.count == 1 {
+                fieldNames.append("instant message")
+            } else {
+                fieldNames.append("instant messages")
+            }
         }
         
-        // Count dates
-        if contact.isKeyAvailable(CNContactBirthdayKey) && contact.birthday != nil { count += 1 }
+        // Dates
+        if contact.isKeyAvailable(CNContactBirthdayKey) && contact.birthday != nil { fieldNames.append("birthday") }
         if contact.isKeyAvailable(CNContactDatesKey) && !contact.dates.isEmpty {
-            count += contact.dates.count
+            if contact.dates.count == 1 {
+                fieldNames.append("date")
+            } else {
+                fieldNames.append("dates")
+            }
         }
         
-        // Count notes
-        if contact.isKeyAvailable(CNContactNoteKey) && !contact.note.isEmpty { count += 1 }
+        // Notes
+        if contact.isKeyAvailable(CNContactNoteKey) && !contact.note.isEmpty { fieldNames.append("note") }
         
-        // Count image
-        if contact.isKeyAvailable(CNContactImageDataAvailableKey) && contact.imageDataAvailable { count += 1 }
+        // Image
+        if contact.isKeyAvailable(CNContactImageDataAvailableKey) && contact.imageDataAvailable { fieldNames.append("image") }
         
-        return count
+        return fieldNames
     }
 
     // MARK: - Duplicate Detection and Merging Handlers
