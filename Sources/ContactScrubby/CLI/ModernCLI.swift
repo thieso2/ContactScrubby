@@ -11,7 +11,7 @@ public struct ContactScrubby: AsyncParsableCommand {
         commandName: "contactscrub",
         abstract: "A modern, powerful contact management and analysis tool",
         discussion: """
-        ContactScrubby v3.0 - Modern Swift architecture with protocol-oriented design
+        ContactScrubby v0.2 - Modern Swift architecture with protocol-oriented design
         
         FEATURES:
         • Protocol-based architecture with dependency injection
@@ -36,7 +36,7 @@ public struct ContactScrubby: AsyncParsableCommand {
         contactscrub --filter dubious --backup contacts.vcf
         contactscrub --filter all --all-fields
         """,
-        version: "3.0",
+        version: "0.2",
         subcommands: [
             ExportCommand.self,
             ImportCommand.self,
