@@ -220,10 +220,14 @@ public final class ModernContactsManager: ContactManaging {
             CNContactDatesKey,
             CNContactOrganizationNameKey,
             CNContactJobTitleKey,
+            CNContactDepartmentNameKey,
             CNContactNoteKey,
             CNContactImageDataKey,
-CNContactTypeKey
-        ] as [CNKeyDescriptor]
+            CNContactImageDataAvailableKey,
+            CNContactThumbnailImageDataKey,
+            CNContactTypeKey,
+            CNContactRelationsKey
+        ].map { $0 as CNKeyDescriptor }
     }
     
     private func convertFromCNContact(_ cnContact: CNContact) -> Contact? {
@@ -313,17 +317,38 @@ CNContactTypeKey
         }
         
         // Organization
-        contact.organizationName = cnContact.organizationName.isEmpty ? nil : cnContact.organizationName
-        contact.jobTitle = cnContact.jobTitle.isEmpty ? nil : cnContact.jobTitle
+        if cnContact.isKeyAvailable(CNContactOrganizationNameKey) {
+            contact.organizationName = cnContact.organizationName.isEmpty ? nil : cnContact.organizationName
+        } else {
+            contact.organizationName = nil
+        }
         
-        // Note
-        contact.note = cnContact.note.isEmpty ? nil : cnContact.note
+        if cnContact.isKeyAvailable(CNContactJobTitleKey) {
+            contact.jobTitle = cnContact.jobTitle.isEmpty ? nil : cnContact.jobTitle
+        } else {
+            contact.jobTitle = nil
+        }
         
-        // Image
-        contact.imageData = cnContact.imageData
+        // Note - Check if property is available to avoid CNPropertyNotFetchedException
+        if cnContact.isKeyAvailable(CNContactNoteKey) {
+            contact.note = cnContact.note.isEmpty ? nil : cnContact.note
+        } else {
+            contact.note = nil
+        }
+        
+        // Image - Check if property is available
+        if cnContact.isKeyAvailable(CNContactImageDataKey) {
+            contact.imageData = cnContact.imageData
+        } else {
+            contact.imageData = nil
+        }
         
         // Contact type
-        contact.contactType = cnContact.contactType == .organization ? .organization : .person
+        if cnContact.isKeyAvailable(CNContactTypeKey) {
+            contact.contactType = cnContact.contactType == .organization ? .organization : .person
+        } else {
+            contact.contactType = .person
+        }
         
         return contact
     }
