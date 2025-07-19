@@ -618,4 +618,134 @@ class ContactsManager {
         
         try store.execute(saveRequest)
     }
+    
+    // MARK: - Import Methods
+    
+    /// Create a CNContact from a SerializableContact
+    func createContact(from serializable: SerializableContact) throws -> CNContact {
+        let contact = CNMutableContact()
+        
+        // Name components
+        contact.namePrefix = serializable.namePrefix ?? ""
+        contact.givenName = serializable.givenName ?? ""
+        contact.middleName = serializable.middleName ?? ""
+        contact.familyName = serializable.familyName ?? ""
+        contact.nameSuffix = serializable.nameSuffix ?? ""
+        contact.nickname = serializable.nickname ?? ""
+        
+        // Phonetic names
+        contact.phoneticGivenName = serializable.phoneticGivenName ?? ""
+        contact.phoneticMiddleName = serializable.phoneticMiddleName ?? ""
+        contact.phoneticFamilyName = serializable.phoneticFamilyName ?? ""
+        
+        // Organization
+        contact.organizationName = serializable.organizationName ?? ""
+        contact.departmentName = serializable.departmentName ?? ""
+        contact.jobTitle = serializable.jobTitle ?? ""
+        
+        // Contact type
+        contact.contactType = serializable.contactType == "Organization" ? .organization : .person
+        
+        // Emails
+        contact.emailAddresses = serializable.emails.map { email in
+            let label = labelString(from: email.label)
+            return CNLabeledValue(label: label, value: email.value as NSString)
+        }
+        
+        // Phone numbers
+        contact.phoneNumbers = serializable.phones.map { phone in
+            let label = labelString(from: phone.label)
+            return CNLabeledValue(label: label, value: CNPhoneNumber(stringValue: phone.value))
+        }
+        
+        // Postal addresses
+        contact.postalAddresses = serializable.postalAddresses.map { address in
+            let label = labelString(from: address.label)
+            let postalAddress = CNMutablePostalAddress()
+            postalAddress.street = address.street ?? ""
+            postalAddress.city = address.city ?? ""
+            postalAddress.state = address.state ?? ""
+            postalAddress.postalCode = address.postalCode ?? ""
+            postalAddress.country = address.country ?? ""
+            return CNLabeledValue(label: label, value: postalAddress)
+        }
+        
+        // URLs
+        contact.urlAddresses = serializable.urls.map { url in
+            let label = labelString(from: url.label)
+            return CNLabeledValue(label: label, value: url.value as NSString)
+        }
+        
+        // Social profiles
+        contact.socialProfiles = serializable.socialProfiles.map { profile in
+            let label = labelString(from: profile.label)
+            let socialProfile = CNSocialProfile(
+                urlString: nil,
+                username: profile.username,
+                userIdentifier: nil,
+                service: profile.service
+            )
+            return CNLabeledValue(label: label, value: socialProfile)
+        }
+        
+        // Instant message addresses
+        contact.instantMessageAddresses = serializable.instantMessageAddresses.map { im in
+            let label = labelString(from: im.label)
+            let imAddress = CNInstantMessageAddress(username: im.username, service: im.service)
+            return CNLabeledValue(label: label, value: imAddress)
+        }
+        
+        // Birthday
+        if let birthday = serializable.birthday {
+            var dateComponents = DateComponents()
+            dateComponents.day = birthday.day
+            dateComponents.month = birthday.month
+            dateComponents.year = birthday.year
+            contact.birthday = dateComponents
+        }
+        
+        // Other dates
+        contact.dates = serializable.dates.map { date in
+            let label = date.label ?? CNLabelOther
+            var dateComponents = DateComponents()
+            dateComponents.day = date.date.day
+            dateComponents.month = date.date.month
+            dateComponents.year = date.date.year
+            return CNLabeledValue(label: label, value: dateComponents as NSDateComponents)
+        }
+        
+        // Note
+        contact.note = serializable.note ?? ""
+        
+        // Image data (if base64 encoded and not a file path)
+        if let imageData = serializable.imageData,
+           !imageData.contains("/"),
+           let data = Data(base64Encoded: imageData) {
+            contact.imageData = data
+        }
+        
+        // Save the contact
+        let saveRequest = CNSaveRequest()
+        saveRequest.add(contact, toContainerWithIdentifier: nil)
+        try store.execute(saveRequest)
+        
+        return contact
+    }
+    
+    /// Convert label string to CNLabel constant
+    private func labelString(from label: String?) -> String? {
+        guard let label = label else { return nil }
+        
+        switch label.lowercased() {
+        case "home": return CNLabelHome
+        case "work": return CNLabelWork
+        case "mobile", "cell": return CNLabelPhoneNumberMobile
+        case "main": return CNLabelPhoneNumberMain
+        case "home fax": return CNLabelPhoneNumberHomeFax
+        case "work fax": return CNLabelPhoneNumberWorkFax
+        case "pager": return CNLabelPhoneNumberPager
+        case "other": return CNLabelOther
+        default: return label
+        }
+    }
 }

@@ -64,7 +64,7 @@ struct CommandHandlers {
         )
 
         guard exportOptions.isValidFormat else {
-            print("Error: Unsupported file format. Please use .json or .xml extension")
+            print("Error: Unsupported file format. Please use .json, .xml, or .vcf extension")
             throw ExitCode.failure
         }
 
@@ -118,8 +118,14 @@ struct CommandHandlers {
                 try ExportUtilities.exportAsXML(contacts: contacts, to: exportOptions.fileURL)
                 print("Successfully exported \(contacts.count) contact(s) to \(filename)")
             }
+        case "vcf":
+            if includeImages == .folder {
+                print("Warning: VCF format embeds images directly. --images=folder option will be ignored.")
+            }
+            try ExportUtilities.exportAsVCF(contacts: contacts, to: exportOptions.fileURL)
+            print("Successfully exported \(contacts.count) contact(s) to \(filename)")
         default:
-            print("Error: Unsupported file format. Please use .json or .xml extension")
+            print("Error: Unsupported file format. Please use .json, .xml, or .vcf extension")
             throw ExitCode.failure
         }
     }

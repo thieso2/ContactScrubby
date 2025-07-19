@@ -271,4 +271,202 @@ struct ExportUtilities {
             .replacingOccurrences(of: "\"", with: "&quot;")
             .replacingOccurrences(of: "'", with: "&apos;")
     }
+
+    // MARK: - VCF Export
+
+    static func exportAsVCF(contacts: [SerializableContact], to url: URL) throws {
+        var vcf = ""
+        
+        for contact in contacts {
+            vcf += "BEGIN:VCARD\n"
+            vcf += "VERSION:3.0\n"
+            
+            // Name components
+            vcf += "FN:\(escapeVCF(contact.name))\n"
+            
+            // Structured name: Family;Given;Middle;Prefix;Suffix
+            let n = [
+                contact.familyName ?? "",
+                contact.givenName ?? "",
+                contact.middleName ?? "",
+                contact.namePrefix ?? "",
+                contact.nameSuffix ?? ""
+            ].map { escapeVCF($0) }.joined(separator: ";")
+            vcf += "N:\(n)\n"
+            
+            // Nickname
+            if let nickname = contact.nickname {
+                vcf += "NICKNAME:\(escapeVCF(nickname))\n"
+            }
+            
+            // Organization
+            if let org = contact.organizationName {
+                var orgLine = escapeVCF(org)
+                if let dept = contact.departmentName {
+                    orgLine += ";\(escapeVCF(dept))"
+                }
+                vcf += "ORG:\(orgLine)\n"
+            }
+            
+            // Job title
+            if let title = contact.jobTitle {
+                vcf += "TITLE:\(escapeVCF(title))\n"
+            }
+            
+            // Emails
+            for email in contact.emails {
+                var emailLine = "EMAIL"
+                if let label = email.label {
+                    emailLine += ";TYPE=\(vcfLabelType(label))"
+                }
+                emailLine += ":\(escapeVCF(email.value))"
+                vcf += "\(emailLine)\n"
+            }
+            
+            // Phone numbers
+            for phone in contact.phones {
+                var phoneLine = "TEL"
+                if let label = phone.label {
+                    phoneLine += ";TYPE=\(vcfLabelType(label))"
+                }
+                phoneLine += ":\(escapeVCF(phone.value))"
+                vcf += "\(phoneLine)\n"
+            }
+            
+            // Addresses
+            for address in contact.postalAddresses {
+                var adrLine = "ADR"
+                if let label = address.label {
+                    adrLine += ";TYPE=\(vcfLabelType(label))"
+                }
+                // ADR format: PO Box;Extended;Street;City;State;PostalCode;Country
+                let adr = [
+                    "", // PO Box
+                    "", // Extended address
+                    address.street ?? "",
+                    address.city ?? "",
+                    address.state ?? "",
+                    address.postalCode ?? "",
+                    address.country ?? ""
+                ].map { escapeVCF($0) }.joined(separator: ";")
+                adrLine += ":\(adr)"
+                vcf += "\(adrLine)\n"
+            }
+            
+            // URLs
+            for url in contact.urls {
+                var urlLine = "URL"
+                if let label = url.label {
+                    urlLine += ";TYPE=\(vcfLabelType(label))"
+                }
+                urlLine += ":\(escapeVCF(url.value))"
+                vcf += "\(urlLine)\n"
+            }
+            
+            // Social profiles (as X-SOCIALPROFILE)
+            for profile in contact.socialProfiles {
+                var socialLine = "X-SOCIALPROFILE"
+                if let label = profile.label {
+                    socialLine += ";TYPE=\(vcfLabelType(label))"
+                }
+                socialLine += ";x-service=\(escapeVCF(profile.service))"
+                socialLine += ":\(escapeVCF(profile.username))"
+                vcf += "\(socialLine)\n"
+            }
+            
+            // Instant messaging (as IMPP)
+            for im in contact.instantMessageAddresses {
+                var imLine = "IMPP"
+                if let label = im.label {
+                    imLine += ";TYPE=\(vcfLabelType(label))"
+                }
+                imLine += ":\(escapeVCF(im.service)):\(escapeVCF(im.username))"
+                vcf += "\(imLine)\n"
+            }
+            
+            // Birthday
+            if let birthday = contact.birthday {
+                let bday = formatVCFDate(birthday)
+                vcf += "BDAY:\(bday)\n"
+            }
+            
+            // Other dates (as X-ABDATE with label)
+            for date in contact.dates {
+                var dateLine = "X-ABDATE"
+                if let label = date.label {
+                    dateLine += ";LABEL=\(escapeVCF(label))"
+                }
+                dateLine += ":\(formatVCFDate(date.date))"
+                vcf += "\(dateLine)\n"
+            }
+            
+            // Note
+            if let note = contact.note {
+                vcf += "NOTE:\(escapeVCF(note))\n"
+            }
+            
+            // Photo (if base64 data is available)
+            if let imageData = contact.imageData, !imageData.contains("/") {
+                // Only include if it's base64 data, not a file path
+                vcf += "PHOTO;ENCODING=BASE64;TYPE=JPEG:\(imageData)\n"
+            }
+            
+            vcf += "END:VCARD\n\n"
+        }
+        
+        try vcf.write(to: url, atomically: true, encoding: .utf8)
+    }
+    
+    // MARK: - VCF Helpers
+    
+    static func escapeVCF(_ string: String) -> String {
+        // VCF requires escaping backslashes, commas, semicolons, and newlines
+        string
+            .replacingOccurrences(of: "\\", with: "\\\\")
+            .replacingOccurrences(of: ",", with: "\\,")
+            .replacingOccurrences(of: ";", with: "\\;")
+            .replacingOccurrences(of: "\n", with: "\\n")
+            .replacingOccurrences(of: "\r", with: "\\r")
+    }
+    
+    static func vcfLabelType(_ label: String) -> String {
+        // Convert common labels to VCF types
+        let lowercased = label.lowercased()
+        switch lowercased {
+        case "home": return "HOME"
+        case "work": return "WORK"
+        case "mobile", "cell": return "CELL"
+        case "main": return "MAIN"
+        case "home fax", "homefax": return "HOME,FAX"
+        case "work fax", "workfax": return "WORK,FAX"
+        case "pager": return "PAGER"
+        case "other": return "OTHER"
+        default: return label.uppercased().replacingOccurrences(of: " ", with: "-")
+        }
+    }
+    
+    static func formatVCFDate(_ date: SerializableContact.DateInfo) -> String {
+        // Format date as YYYY-MM-DD or partial date
+        var components: [String] = []
+        
+        if let year = date.year {
+            components.append(String(format: "%04d", year))
+        } else {
+            components.append("--")
+        }
+        
+        if let month = date.month {
+            components.append(String(format: "%02d", month))
+        } else {
+            components.append("-")
+        }
+        
+        if let day = date.day {
+            components.append(String(format: "%02d", day))
+        } else {
+            components.append("-")
+        }
+        
+        return components.joined(separator: "-")
+    }
 }

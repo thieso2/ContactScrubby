@@ -63,7 +63,7 @@ struct ExportOptions {
     }
 
     var isValidFormat: Bool {
-        ["json", "xml"].contains(fileExtension)
+        ["json", "xml", "vcf"].contains(fileExtension)
     }
 }
 

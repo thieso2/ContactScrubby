@@ -19,11 +19,14 @@ struct ContactScrubby: AsyncParsableCommand {
     @Flag(name: .long, help: "Show all available contact fields")
     var allFields: Bool = false
 
-    @Option(name: .long, help: "Export contacts to file (JSON or XML)")
+    @Option(name: .long, help: "Export contacts to file (JSON, XML, or VCF)")
     var backup: String?
 
     @Option(name: .long, help: "Include images in export")
     var includeImages: ImageMode = .none
+
+    @Option(name: .long, help: "Import contacts from VCF file")
+    var importVCF: String?
 
     @Option(name: .long, help: "Add filtered contacts to specified group")
     var addToGroup: String?
@@ -40,7 +43,7 @@ struct ContactScrubby: AsyncParsableCommand {
     func run() async throws {
         // Check if no arguments were provided (all options are at their default values)
         if filter == .all && dubiousScore == 3 && !allFields && backup == nil && 
-           includeImages == .none && addToGroup == nil && !findDuplicates && !mergeDuplicates &&
+           includeImages == .none && importVCF == nil && addToGroup == nil && !findDuplicates && !mergeDuplicates &&
            mergeStrategy == "conservative" {
             // Check if we're being called with no arguments at all
             if CommandLine.arguments.count == 1 {
@@ -56,6 +59,15 @@ struct ContactScrubby: AsyncParsableCommand {
         if !granted {
             print("Access to contacts was denied. Please grant permission in System Preferences.")
             throw ExitCode.failure
+        }
+
+        // Handle VCF import if requested
+        if let vcfFile = importVCF {
+            try await handleImportOperation(
+                manager: manager,
+                filename: vcfFile
+            )
+            return
         }
 
         // Handle merge duplicates if requested
@@ -131,6 +143,75 @@ struct ContactScrubby: AsyncParsableCommand {
             return .interactive
         default:
             return .conservative
+        }
+    }
+
+    private func handleImportOperation(manager: ContactsManager, filename: String) async throws {
+        let url = URL(fileURLWithPath: filename)
+        
+        guard FileManager.default.fileExists(atPath: filename) else {
+            print("Error: File not found at \(filename)")
+            throw ExitCode.failure
+        }
+        
+        guard url.pathExtension.lowercased() == "vcf" else {
+            print("Error: Import only supports VCF files. File must have .vcf extension")
+            throw ExitCode.failure
+        }
+        
+        print("Importing contacts from \(filename)...")
+        
+        do {
+            let serializableContacts = try VCFImportUtilities.importFromVCF(at: url)
+            
+            if serializableContacts.isEmpty {
+                print("No valid contacts found in the VCF file.")
+                return
+            }
+            
+            print("Found \(serializableContacts.count) contact(s) to import.")
+            
+            var successCount = 0
+            var failedCount = 0
+            var errors: [String] = []
+            
+            for (index, serializable) in serializableContacts.enumerated() {
+                do {
+                    _ = try manager.createContact(from: serializable)
+                    successCount += 1
+                    print("✓ Imported: \(serializable.name)")
+                } catch {
+                    failedCount += 1
+                    errors.append("\(serializable.name): \(error.localizedDescription)")
+                    print("✗ Failed: \(serializable.name) - \(error.localizedDescription)")
+                }
+                
+                // Show progress for large imports
+                if (index + 1) % 10 == 0 {
+                    print("Progress: \(index + 1)/\(serializableContacts.count)...")
+                }
+            }
+            
+            print("\n🎉 Import completed!")
+            print("Successfully imported: \(successCount) contact(s)")
+            if failedCount > 0 {
+                print("Failed to import: \(failedCount) contact(s)")
+                if !errors.isEmpty && errors.count <= 10 {
+                    print("\nErrors:")
+                    for error in errors {
+                        print("  - \(error)")
+                    }
+                } else if errors.count > 10 {
+                    print("\nFirst 10 errors:")
+                    for error in errors.prefix(10) {
+                        print("  - \(error)")
+                    }
+                    print("... and \(errors.count - 10) more errors")
+                }
+            }
+        } catch {
+            print("Error reading VCF file: \(error.localizedDescription)")
+            throw ExitCode.failure
         }
     }
 
