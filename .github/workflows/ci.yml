@@ -162,17 +162,16 @@ jobs:
           
     - name: Build documentation
       run: |
-        # Generate DocC documentation using xcodebuild
-        xcodebuild docbuild \
-          -scheme contactscrub \
-          -destination "generic/platform=macOS" \
-          -derivedDataPath docs-build
-          
-        # Convert .doccarchive to static hosting format
-        $(xcrun --find docc) process-archive \
-          transform-for-static-hosting \
-          docs-build/Build/Products/Debug/contactscrub.doccarchive \
+        # Build the project first
+        swift build
+        
+        # Generate documentation using swift-docc-plugin
+        swift package \
+          --allow-writing-to-directory docs \
+          generate-documentation \
+          --target ContactScrubby \
           --output-path docs \
+          --transform-for-static-hosting \
           --hosting-base-path ContactScrubby
           
     - name: Upload documentation artifact
