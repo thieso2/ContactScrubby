@@ -174,12 +174,8 @@ jobs:
           --transform-for-static-hosting \
           --hosting-base-path ContactScrubby
           
-    - name: Upload documentation artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: documentation
-        path: docs/
-        retention-days: 1
+    # Skip artifact upload due to filename issues with DocC-generated paths
+    # Documentation will be uploaded directly to Pages below
         
     - name: Setup Pages
       uses: actions/configure-pages@v4
