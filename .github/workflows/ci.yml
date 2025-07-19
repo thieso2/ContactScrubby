@@ -171,8 +171,7 @@ jobs:
           generate-documentation \
           --target ContactScrubby \
           --output-path docs \
-          --transform-for-static-hosting \
-          --hosting-base-path ContactScrubby
+          --transform-for-static-hosting
           
     # Skip artifact upload due to filename issues with DocC-generated paths
     # Documentation will be uploaded directly to Pages below
