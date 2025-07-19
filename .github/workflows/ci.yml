@@ -50,7 +50,7 @@ jobs:
   build:
     name: Build
     runs-on: macos-15
-    needs: test
+    needs: []
     
     steps:
     - name: Checkout code
@@ -136,7 +136,7 @@ jobs:
   documentation:
     name: Generate Documentation
     runs-on: macos-15
-    needs: [test, build]
+    needs: [build]
     if: github.ref == 'refs/heads/main'
     permissions:
       contents: read
