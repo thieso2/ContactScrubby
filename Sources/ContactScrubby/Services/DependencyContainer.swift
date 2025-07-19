@@ -1,6 +1,7 @@
 import Foundation
 
 /// Dependency injection container for managing application services
+@MainActor
 public final class DependencyContainer: ObservableObject {
     
     // MARK: - Core Services
@@ -48,7 +49,6 @@ public final class DependencyContainer: ObservableObject {
     
     // MARK: - Factory Methods
     
-    @MainActor
     public func makeContactManager() -> ContactManaging {
         ModernContactsManager(
             analyzer: contactAnalyzer,
@@ -207,6 +207,7 @@ public final class OperationCoordinator {
     
     // MARK: - High-Level Operations
     
+    @MainActor
     public func executeExportOperation(
         filter: ContactFilter,
         destination: ExportDestination,
@@ -227,7 +228,7 @@ public final class OperationCoordinator {
             return .failure(.system(.internalError("Container not available")))
         }
         
-        let contactManager = await container.makeContactManager()
+        let contactManager = container.makeContactManager()
         
         do {
             let accessGranted = try await contactManager.requestAccess()
@@ -292,6 +293,7 @@ public final class OperationCoordinator {
         }
     }
     
+    @MainActor
     public func executeImportOperation(
         source: ImportSource,
         createInContacts: Bool = false
@@ -344,7 +346,7 @@ public final class OperationCoordinator {
                 return .failure(.system(.internalError("Container not available")))
             }
             
-            let contactManager = await container.makeContactManager()
+            let contactManager = container.makeContactManager()
             
             do {
                 let accessGranted = try await contactManager.requestAccess()
@@ -385,6 +387,7 @@ public final class OperationCoordinator {
         }
     }
     
+    @MainActor
     public func executeAnalysisOperation(filter: ContactFilter) async -> Result<[ContactAnalysis], ContactError> {
         logger?.log(level: .info, message: "Starting analysis operation", context: [
             "filter": filter.mode.rawValue,
@@ -400,7 +403,7 @@ public final class OperationCoordinator {
             return .failure(.system(.internalError("Container not available")))
         }
         
-        let contactManager = await container.makeContactManager()
+        let contactManager = container.makeContactManager()
         
         do {
             let accessGranted = try await contactManager.requestAccess()

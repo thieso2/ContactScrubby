@@ -133,6 +133,67 @@ jobs:
         
         echo "✅ Basic security scan completed"
 
+  documentation:
+    name: Generate Documentation
+    runs-on: macos-15
+    needs: [test, build]
+    if: github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Swift
+      uses: swift-actions/setup-swift@v2
+      with:
+        swift-version: '6.0'
+        
+    - name: Cache Swift packages
+      uses: actions/cache@v4
+      with:
+        path: .build
+        key: ${{ runner.os }}-swift-${{ hashFiles('**/Package.resolved') }}
+        restore-keys: |
+          ${{ runner.os }}-swift-
+          
+    - name: Build documentation
+      run: |
+        # Generate DocC documentation using xcodebuild
+        xcodebuild docbuild \
+          -scheme contactscrub \
+          -destination "generic/platform=macOS" \
+          -derivedDataPath docs-build
+          
+        # Convert .doccarchive to static hosting format
+        $(xcrun --find docc) process-archive \
+          transform-for-static-hosting \
+          docs-build/Build/Products/Debug/contactscrub.doccarchive \
+          --output-path docs \
+          --hosting-base-path ContactScrubby
+          
+    - name: Upload documentation artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: documentation
+        path: docs/
+        retention-days: 1
+        
+    - name: Setup Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload to Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: docs/
+        
+    - name: Deploy to Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+
   release:
     name: Release
     runs-on: macos-15

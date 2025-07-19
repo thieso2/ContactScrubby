@@ -88,6 +88,7 @@ extension ContactScrubby {
         
         public init() {}
         
+        @MainActor
         public func run() async throws {
             let container = DependencyContainer()
             let coordinator = container.makeOperationCoordinator()
@@ -174,6 +175,7 @@ extension ContactScrubby {
         
         public init() {}
         
+        @MainActor
         public func run() async throws {
             let container = DependencyContainer()
             let coordinator = container.makeOperationCoordinator()
@@ -258,6 +260,7 @@ extension ContactScrubby {
         
         public init() {}
         
+        @MainActor
         public func run() async throws {
             let container = DependencyContainer()
             let coordinator = container.makeOperationCoordinator()
@@ -372,6 +375,7 @@ extension ContactScrubby {
         
         public init() {}
         
+        @MainActor
         public func run() async throws {
             let container = DependencyContainer()
             
@@ -385,7 +389,7 @@ extension ContactScrubby {
             let contactFilter = container.makeContactFilter(mode: filter, dubiousScore: dubiousScore)
             
             // Load contacts
-            let contactManager = await container.makeContactManager()
+            let contactManager = container.makeContactManager()
             
             do {
                 let accessGranted = try await contactManager.requestAccess()
@@ -510,6 +514,7 @@ extension ContactScrubby {
         
         public init() {}
         
+        @MainActor
         public func run() async throws {
             // Handle --source-destination option (source:destination format)
             if let sourceDestination = sourceDestination {
@@ -566,6 +571,7 @@ extension ContactScrubby {
             try await listCommand.run()
         }
         
+        @MainActor
         private func handleSourceDestinationMode(source: String, destination: String) async throws {
             let container = DependencyContainer()
             let coordinator = container.makeOperationCoordinator()
