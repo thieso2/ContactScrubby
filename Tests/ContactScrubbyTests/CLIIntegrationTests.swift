@@ -14,7 +14,7 @@ struct CLIIntegrationTests {
         
         #expect(config.commandName == "contactscrub")
         #expect(config.abstract == "A powerful contact scrubbing and management tool")
-        #expect(config.version == "0.1")
+        #expect(config.version == "0.2")
     }
     
     // MARK: - Argument Parsing Tests

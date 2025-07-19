@@ -2,6 +2,68 @@ import Foundation
 import ArgumentParser
 import Contacts
 
+// MARK: - Source and Destination Types
+
+enum SourceType: String, ExpressibleByArgument, CaseIterable {
+    case contacts = "contacts"
+    case json = "json"
+    case xml = "xml"
+    case vcf = "vcf"
+    
+    var help: String {
+        switch self {
+        case .contacts:
+            return "macOS Contacts database"
+        case .json:
+            return "JSON file"
+        case .xml:
+            return "XML file"
+        case .vcf:
+            return "VCF (vCard) file"
+        }
+    }
+    
+    static func fromFilename(_ filename: String) -> SourceType? {
+        let ext = URL(fileURLWithPath: filename).pathExtension.lowercased()
+        switch ext {
+        case "json": return .json
+        case "xml": return .xml
+        case "vcf": return .vcf
+        default: return nil
+        }
+    }
+}
+
+enum DestinationType: String, ExpressibleByArgument, CaseIterable {
+    case contacts = "contacts"
+    case json = "json"
+    case xml = "xml"
+    case vcf = "vcf"
+    
+    var help: String {
+        switch self {
+        case .contacts:
+            return "macOS Contacts database"
+        case .json:
+            return "JSON file"
+        case .xml:
+            return "XML file"
+        case .vcf:
+            return "VCF (vCard) file"
+        }
+    }
+    
+    static func fromFilename(_ filename: String) -> DestinationType? {
+        let ext = URL(fileURLWithPath: filename).pathExtension.lowercased()
+        switch ext {
+        case "json": return .json
+        case "xml": return .xml
+        case "vcf": return .vcf
+        default: return nil
+        }
+    }
+}
+
 enum FilterMode: String, ExpressibleByArgument, CaseIterable {
     case withEmail = "with-email"
     case withoutEmail = "no-email"
